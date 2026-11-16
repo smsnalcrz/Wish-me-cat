@@ -3,7 +3,7 @@ import { SaveData, QuestData } from '../../types/game';
 import { QUESTS } from '../../data/quests';
 import { SaveManager } from '../../systems/save/SaveManager';
 import { AudioManager } from '../../systems/audio/AudioManager';
-import { X, CheckCircle, Sparkles } from 'lucide-react';
+import { PixelCloseIcon, PixelQuestIcon, PixelCheckIcon, PixelStardustIcon } from '../ui/PixelIcons';
 
 interface QuestModalProps {
   saveData: SaveData;
@@ -44,13 +44,16 @@ export const QuestModal: React.FC<QuestModalProps> = ({ saveData, onClose, onUpd
 
   return (
     <div className="modal-backdrop">
-      <div className="cosmic-panel modal-card" style={{ maxWidth: '720px' }}>
+      <div className="cosmic-panel modal-card pixel-panel" style={{ maxWidth: '700px' }}>
         <div className="modal-header">
-          <div className="modal-title">Cosmic Angler Quest Board</div>
-          <button className="close-btn" onClick={onClose}><X size={22} /></button>
+          <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <PixelQuestIcon size={22} />
+            <span>CELESTIAL QUEST OBSERVATORY</span>
+          </div>
+          <button className="close-btn" onClick={onClose}><PixelCloseIcon size={18} /></button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {QUESTS.map((quest) => {
             const current = saveData.questProgress[quest.id] || 0;
             const isCompleted = saveData.completedQuestIds.includes(quest.id);
@@ -61,37 +64,46 @@ export const QuestModal: React.FC<QuestModalProps> = ({ saveData, onClose, onUpd
               <div
                 key={quest.id}
                 style={{
-                  background: 'rgba(0,0,0,0.3)',
-                  padding: '16px 20px',
-                  borderRadius: '12px',
-                  border: isClaimed ? '1px solid rgba(255,255,255,0.05)' : (isCompleted ? '1px solid #4ade80' : '1px solid rgba(255,255,255,0.1)'),
+                  background: '#0d0a20',
+                  padding: '12px 16px',
+                  border: isClaimed ? '2px solid #281f4a' : (isCompleted ? '2px solid #22c55e' : '2px solid #3b2c68'),
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: '16px'
+                  gap: '14px'
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '17px', fontWeight: 700, color: '#f8fafc', marginBottom: '4px' }}>
-                    {quest.title}
+                  <div style={{ fontSize: '13px', fontFamily: 'var(--font-heading)', color: '#f8fafc', marginBottom: '4px' }}>
+                    {quest.title.toUpperCase()}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '8px' }}>
                     {quest.description}
                   </div>
 
                   {/* Progress bar */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: `${progressPct}%`, height: '100%', background: isCompleted ? '#4ade80' : '#38bdf8' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="exp-bar-bg" style={{ flex: 1, height: '10px' }}>
+                      <div
+                        className="exp-bar-fill"
+                        style={{
+                          width: `${progressPct}%`,
+                          background: isCompleted ? '#22c55e' : '#0284c7',
+                          boxShadow: isCompleted ? 'inset 0 2px 0 0 #86efac' : 'inset 0 2px 0 0 #38bdf8'
+                        }}
+                      />
                     </div>
-                    <span style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 600 }}>
+                    <span style={{ fontSize: '10px', color: '#cbd5e1', fontFamily: 'var(--font-heading)' }}>
                       {Math.min(current, quest.targetCount)} / {quest.targetCount}
                     </span>
                   </div>
 
                   {/* Rewards tag */}
-                  <div style={{ marginTop: '8px', fontSize: '12px', display: 'flex', gap: '12px' }}>
-                    <span style={{ color: '#fbbf24' }}>+{quest.rewardStardust} Stardust</span>
+                  <div style={{ marginTop: '6px', fontSize: '10px', fontFamily: 'var(--font-heading)', display: 'flex', gap: '12px' }}>
+                    <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <PixelStardustIcon size={12} />
+                      +{quest.rewardStardust} STARDUST
+                    </span>
                     <span style={{ color: '#38bdf8' }}>+{quest.rewardExp} EXP</span>
                   </div>
                 </div>
@@ -99,18 +111,23 @@ export const QuestModal: React.FC<QuestModalProps> = ({ saveData, onClose, onUpd
                 {/* Claim / Status Button */}
                 <div>
                   {isClaimed ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4ade80', fontSize: '14px', fontWeight: 700 }}>
-                      <CheckCircle size={18} />
-                      <span>Claimed</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4ade80', fontSize: '10px', fontFamily: 'var(--font-heading)' }}>
+                      <PixelCheckIcon size={14} color="#4ade80" />
+                      <span>CLAIMED</span>
                     </div>
                   ) : (
                     <button
                       className="cosmic-button"
                       disabled={!isCompleted}
                       onClick={() => handleClaim(quest)}
-                      style={{ padding: '8px 18px', fontSize: '14px' }}
+                      style={{
+                        padding: '8px 14px',
+                        fontSize: '10px',
+                        background: isCompleted ? '#15803d' : '#334155',
+                        boxShadow: isCompleted ? '0 -2px 0 0 #22c55e, 0 2px 0 0 #14532d, -2px 0 0 0 #22c55e, 2px 0 0 0 #14532d' : 'none'
+                      }}
                     >
-                      {isCompleted ? 'Claim Reward!' : 'In Progress'}
+                      {isCompleted ? '✦ CLAIM! ✦' : 'IN PROGRESS'}
                     </button>
                   )}
                 </div>

@@ -3,7 +3,7 @@ import { SaveData, RegionData } from '../../types/game';
 import { REGIONS } from '../../data/regions';
 import { SaveManager } from '../../systems/save/SaveManager';
 import { AudioManager } from '../../systems/audio/AudioManager';
-import { X, Lock, CheckCircle, Navigation } from 'lucide-react';
+import { PixelCloseIcon, PixelRegionIcon, PixelStardustIcon } from '../ui/PixelIcons';
 
 interface RegionModalProps {
   saveData: SaveData;
@@ -46,13 +46,16 @@ export const RegionModal: React.FC<RegionModalProps> = ({ saveData, onClose, onU
 
   return (
     <div className="modal-backdrop">
-      <div className="cosmic-panel modal-card" style={{ maxWidth: '740px' }}>
+      <div className="cosmic-panel modal-card pixel-panel" style={{ maxWidth: '720px' }}>
         <div className="modal-header">
-          <div className="modal-title">Cosmic Region Gateway</div>
-          <button className="close-btn" onClick={onClose}><X size={22} /></button>
+          <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <PixelRegionIcon size={22} />
+            <span>COSMIC REALM GATEWAY</span>
+          </div>
+          <button className="close-btn" onClick={onClose}><PixelCloseIcon size={18} /></button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {REGIONS.map((region) => {
             const isUnlocked = saveData.unlockedRegionIds.includes(region.id);
             const isCurrent = saveData.currentRegionId === region.id;
@@ -63,62 +66,64 @@ export const RegionModal: React.FC<RegionModalProps> = ({ saveData, onClose, onU
               <div
                 key={region.id}
                 style={{
-                  background: isCurrent ? 'rgba(56, 189, 248, 0.12)' : 'rgba(0,0,0,0.3)',
-                  padding: '16px 20px',
-                  borderRadius: '14px',
-                  border: isCurrent ? '2px solid #38bdf8' : (isUnlocked ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.05)'),
+                  background: isCurrent ? '#16204a' : '#0c0a20',
+                  padding: '14px 16px',
+                  border: isCurrent ? '2px solid #38bdf8' : (isUnlocked ? '2px solid #3b2c68' : '2px solid #201b38'),
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: '16px'
+                  gap: '14px'
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 700, color: isCurrent ? '#38bdf8' : '#f8fafc' }}>
-                      {region.name}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '13px', fontFamily: 'var(--font-heading)', color: isCurrent ? '#38bdf8' : '#f8fafc' }}>
+                      {region.name.toUpperCase()}
                     </span>
                     {isCurrent && (
-                      <span style={{ fontSize: '11px', background: '#0284c7', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
-                        CURRENT LOCATION
+                      <span style={{ fontSize: '9px', background: '#0284c7', color: '#fff', padding: '2px 6px', fontFamily: 'var(--font-heading)' }}>
+                        CURRENT
                       </span>
                     )}
                   </div>
 
-                  <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '8px' }}>
+                  <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
                     {region.description}
                   </p>
 
                   {!isUnlocked && (
-                    <div style={{ fontSize: '12px', display: 'flex', gap: '12px', color: levelLocked ? '#f43f5e' : '#fbbf24' }}>
-                      <span>Requires Level {region.requiredLevel}</span>
+                    <div style={{ fontSize: '10px', display: 'flex', gap: '10px', color: levelLocked ? '#f43f5e' : '#fbbf24', fontFamily: 'var(--font-heading)' }}>
+                      <span>REQ LVL {region.requiredLevel}</span>
                       <span>•</span>
-                      <span>Unlock Cost: {region.stardustCost} Stardust</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <PixelStardustIcon size={12} />
+                        COST: {region.stardustCost} STARDUST
+                      </span>
                     </div>
                   )}
                 </div>
 
                 <div>
                   {isCurrent ? (
-                    <button className="cosmic-button" disabled style={{ padding: '8px 20px', fontSize: '14px' }}>
-                      Here
+                    <button className="cosmic-button" disabled style={{ padding: '6px 14px', fontSize: '10px' }}>
+                      HERE
                     </button>
                   ) : isUnlocked ? (
                     <button
                       className="cosmic-button"
                       onClick={() => handleTravel(region)}
-                      style={{ padding: '8px 20px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      style={{ padding: '6px 14px', fontSize: '10px' }}
                     >
-                      <Navigation size={16} /> Travel
+                      ✦ TRAVEL ✦
                     </button>
                   ) : (
                     <button
                       className="cosmic-button"
                       disabled={!canUnlock}
                       onClick={() => handleUnlock(region)}
-                      style={{ padding: '8px 20px', fontSize: '14px' }}
+                      style={{ padding: '6px 14px', fontSize: '10px', background: canUnlock ? '#6d28d9' : '#334155' }}
                     >
-                      {levelLocked ? `Locked (Lv.${region.requiredLevel})` : `Unlock (${region.stardustCost} ⭐)`}
+                      {levelLocked ? `LOCKED (LV.${region.requiredLevel})` : `UNLOCK (${region.stardustCost} ⭐)`}
                     </button>
                   )}
                 </div>

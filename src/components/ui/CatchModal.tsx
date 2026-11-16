@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { CatchResult } from '../../types/game';
 import { generateCreatureSprite } from '../../game2d/rendering/PixelSprites';
-import { Sparkles, Award } from 'lucide-react';
+import { PixelStardustIcon } from './PixelIcons';
 
 interface CatchModalProps {
   result: CatchResult;
@@ -18,7 +18,6 @@ export const CatchModal: React.FC<CatchModalProps> = ({ result, onClose }) => {
   }, [creature, variant]);
 
   useEffect(() => {
-    // Launch celebratory confetti fireworks
     confetti({
       particleCount: creature.rarity === 'mythic' ? 120 : 60,
       spread: 70,
@@ -30,9 +29,9 @@ export const CatchModal: React.FC<CatchModalProps> = ({ result, onClose }) => {
 
   return (
     <div className="modal-backdrop">
-      <div className="cosmic-panel modal-card pixel-panel" style={{ maxWidth: '520px', textAlign: 'center' }}>
-        <div style={{ color: '#fbbf24', fontSize: '15px', fontWeight: 700, letterSpacing: '1px' }}>
-          ★ CELESTIAL CATCH SUCCESSFUL! ★
+      <div className="cosmic-panel modal-card pixel-panel" style={{ maxWidth: '480px', textAlign: 'center' }}>
+        <div style={{ color: '#fbbf24', fontSize: '13px', fontFamily: 'var(--font-heading)', letterSpacing: '1px' }}>
+          ★ CATCH SUCCESSFUL! ★
         </div>
 
         <div className="catch-showcase">
@@ -41,25 +40,27 @@ export const CatchModal: React.FC<CatchModalProps> = ({ result, onClose }) => {
             className="creature-glow-orb"
             style={{
               color: creature.glowColor,
-              background: `radial-gradient(circle, ${creature.glowColor} 0%, ${creature.secondaryColor} 60%, transparent 80%)`,
+              background: `radial-gradient(circle, ${creature.glowColor}44 0%, transparent 75%)`,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              width: '110px',
+              height: '110px'
             }}
           >
             <img
               src={spriteDataUrl}
               alt={creature.name}
               style={{
-                width: '88px',
-                height: '88px',
+                width: '80px',
+                height: '80px',
                 imageRendering: 'pixelated',
-                filter: `drop-shadow(0 0 12px ${creature.glowColor})`
+                filter: `drop-shadow(0 0 10px ${creature.glowColor})`
               }}
             />
           </div>
 
-          <div style={{ fontSize: '30px', fontWeight: 700, color: '#fff' }}>
+          <div style={{ fontSize: '20px', fontFamily: 'var(--font-heading)', color: '#fff', letterSpacing: '1px' }}>
             {creature.name}
           </div>
 
@@ -69,46 +70,47 @@ export const CatchModal: React.FC<CatchModalProps> = ({ result, onClose }) => {
             </span>
 
             {variant !== 'normal' && (
-              <span style={{ color: '#f472b6', fontWeight: 700, fontSize: '13px', background: 'rgba(244, 114, 182, 0.2)', padding: '4px 10px', borderRadius: '15px', border: '1px solid #f472b6' }}>
-                ★ {variant.toUpperCase()} VARIANT ★
+              <span className="rarity-badge" style={{ color: '#f472b6', borderColor: '#f472b6', background: 'rgba(244, 114, 182, 0.2)' }}>
+                ★ {variant.toUpperCase()} ★
               </span>
             )}
           </div>
 
-          <div style={{ fontSize: '15px', color: '#cbd5e1' }}>
-            Weight: <strong>{weight}</strong> light-grams
+          <div style={{ fontSize: '13px', color: '#cbd5e1', fontFamily: 'var(--font-heading)' }}>
+            WEIGHT: <strong style={{ color: '#fef08a' }}>{weight}</strong> LG
           </div>
 
           {/* New tags */}
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             {isNewDiscovery && (
-              <div style={{ background: '#3b82f6', color: '#fff', fontSize: '12px', fontWeight: 700, padding: '3px 10px', borderRadius: '12px' }}>
-                NEW ALMANAC DISCOVERY!
+              <div style={{ background: '#0284c7', color: '#fff', fontSize: '10px', fontFamily: 'var(--font-heading)', padding: '4px 8px' }}>
+                NEW DISCOVERY!
               </div>
             )}
             {isNewRecord && (
-              <div style={{ background: '#eab308', color: '#fff', fontSize: '12px', fontWeight: 700, padding: '3px 10px', borderRadius: '12px' }}>
-                NEW WEIGHT RECORD!
+              <div style={{ background: '#ca8a04', color: '#fff', fontSize: '10px', fontFamily: 'var(--font-heading)', padding: '4px 8px' }}>
+                NEW RECORD!
               </div>
             )}
           </div>
 
           {/* Reward pills */}
           <div className="rewards-row">
-            <div className="reward-pill" style={{ color: '#fbbf24' }}>
-              +{stardust} Stardust
+            <div className="reward-pill" style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <PixelStardustIcon size={16} />
+              <span>+{stardust} STARDUST</span>
             </div>
             <div className="reward-pill" style={{ color: '#38bdf8' }}>
               +{exp} EXP
             </div>
           </div>
 
-          <p style={{ fontSize: '14px', color: '#94a3b8', maxWidth: '400px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '13px', color: '#94a3b8', maxWidth: '380px', lineHeight: 1.5 }}>
             {creature.description}
           </p>
 
           <button className="cosmic-button" onClick={onClose} style={{ marginTop: '10px', width: '100%' }}>
-            Collect Celestial Star
+            ✦ KEEP CATCH & RESUME ✦
           </button>
         </div>
       </div>

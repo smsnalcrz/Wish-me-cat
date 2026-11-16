@@ -183,17 +183,23 @@ export class PixelCat {
     }
     ctx.restore();
 
-    // 4. Bite Reaction Exclamation Mark (!)
+    // 4. Bite Reaction Exclamation Mark (!) (Pixel Bubble)
     if (this.animState === 'fish_bite') {
       ctx.save();
-      ctx.fillStyle = '#ef4444';
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2 * scale;
-      ctx.font = `bold ${16 * scale}px sans-serif`;
-      ctx.textAlign = 'center';
       const jumpY = Math.sin(performance.now() * 0.02) * 4 * scale;
-      ctx.strokeText('!', screen.x, drawY - 8 * scale + jumpY);
-      ctx.fillText('!', screen.x, drawY - 8 * scale + jumpY);
+      const bubbleX = screen.x;
+      const bubbleY = drawY - 14 * scale + jumpY;
+
+      // Pixel Bubble Box
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(bubbleX - 8 * scale, bubbleY - 8 * scale, 16 * scale, 16 * scale);
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeRect(bubbleX - 8 * scale, bubbleY - 8 * scale, 16 * scale, 16 * scale);
+
+      ctx.font = `bold ${Math.max(10, Math.floor(10 * scale))}px 'Press Start 2P', monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('!', bubbleX, bubbleY);
       ctx.restore();
     }
   }

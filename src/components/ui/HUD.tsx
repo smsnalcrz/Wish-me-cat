@@ -1,8 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { SaveData } from '../../types/game';
 import { REGIONS } from '../../data/regions';
 import { QUESTS } from '../../data/quests';
-import { Sparkles, Compass, BookOpen, ShoppingBag, Volume2, VolumeX, Pause, HelpCircle, Lock, Unlock } from 'lucide-react';
+import {
+  PixelStardustIcon,
+  PixelCatIcon,
+  PixelShopIcon,
+  PixelAlmanacIcon,
+  PixelConstellationIcon,
+  PixelRegionIcon,
+  PixelAudioIcon,
+  PixelPauseIcon,
+  PixelFishingRodIcon,
+  PixelQuestIcon
+} from './PixelIcons';
 
 interface HUDProps {
   saveData: SaveData;
@@ -33,18 +44,6 @@ export const HUD: React.FC<HUDProps> = ({
   onToggleMute,
   isMuted
 }) => {
-  const [isShiftLock, setIsShiftLock] = useState(false);
-
-  useEffect(() => {
-    const handleShiftLockChanged = (e: Event) => {
-      setIsShiftLock(Boolean((e as CustomEvent).detail));
-    };
-    window.addEventListener('shift-lock-changed', handleShiftLockChanged);
-    return () => {
-      window.removeEventListener('shift-lock-changed', handleShiftLockChanged);
-    };
-  }, []);
-
   // Required EXP formula
   const requiredExp = Math.round(50 * Math.pow(saveData.playerLevel, 1.45));
   const expProgress = Math.min(100, Math.round((saveData.playerExp / Math.max(1, requiredExp)) * 100));
@@ -63,11 +62,11 @@ export const HUD: React.FC<HUDProps> = ({
         {/* Player Level & EXP */}
         <div className="cosmic-panel player-card pointer-events-auto">
           <div className="level-badge">
-            <span>{saveData.playerLevel}</span>
-            <small>LVL</small>
+            <span style={{ fontSize: '15px', color: '#fff', lineHeight: 1 }}>{saveData.playerLevel}</span>
+            <small style={{ fontSize: '9px', color: '#fef08a' }}>LVL</small>
           </div>
           <div className="exp-container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>
               <span>EXP</span>
               <span>{saveData.playerExp} / {requiredExp}</span>
             </div>
@@ -78,33 +77,33 @@ export const HUD: React.FC<HUDProps> = ({
         </div>
 
         {/* Currency & Action shortcuts */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <div className="cosmic-panel currency-badge pointer-events-auto">
-            <Sparkles size={22} />
-            <span>{saveData.stardust.toLocaleString()} Stardust</span>
+            <PixelStardustIcon size={20} />
+            <span>{saveData.stardust.toLocaleString()} STARDUST</span>
           </div>
 
           <div className="quick-buttons pointer-events-auto">
-            <button className="icon-button" onClick={onOpenWardrobe} title="Cat Wardrobe (Change Cat Model)" style={{ position: 'relative' }}>
-              <span style={{ fontSize: '18px', lineHeight: 1 }}>🐱</span>
+            <button className="icon-button" onClick={onOpenWardrobe} title="Cat Wardrobe (Change Breed)">
+              <PixelCatIcon size={20} />
             </button>
-            <button className="icon-button" onClick={onOpenShop} title="Equipment Shop">
-              <ShoppingBag size={20} />
+            <button className="icon-button" onClick={onOpenShop} title="Cosmic Gear Emporium">
+              <PixelShopIcon size={20} />
             </button>
             <button className="icon-button" onClick={onOpenCollection} title="Star Almanac">
-              <BookOpen size={20} />
+              <PixelAlmanacIcon size={20} />
             </button>
-            <button className="icon-button" onClick={onOpenConstellations} title="Constellations">
-              <Sparkles size={20} />
+            <button className="icon-button" onClick={onOpenConstellations} title="Constellation Altar">
+              <PixelConstellationIcon size={20} />
             </button>
-            <button className="icon-button" onClick={onOpenRegions} title="Region Gateway">
-              <Compass size={20} />
+            <button className="icon-button" onClick={onOpenRegions} title="Cosmic Realm Gateway">
+              <PixelRegionIcon size={20} />
             </button>
             <button className="icon-button" onClick={onToggleMute} title={isMuted ? "Unmute Audio" : "Mute Audio"}>
-              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              <PixelAudioIcon size={20} isMuted={isMuted} />
             </button>
-            <button className="icon-button" onClick={onOpenPause} title="Pause / Settings">
-              <Pause size={20} />
+            <button className="icon-button" onClick={onOpenPause} title="Pause Menu">
+              <PixelPauseIcon size={20} />
             </button>
           </div>
         </div>
@@ -123,17 +122,26 @@ export const HUD: React.FC<HUDProps> = ({
       <div className="hud-bottom">
         {/* Current Region info */}
         <div className="cosmic-panel location-info pointer-events-auto" onClick={onOpenRegions} style={{ cursor: 'pointer' }}>
-          <div className="region-title">{currentRegion.name}</div>
-          <div className="gear-subtitle">Rod: Starlight Caster (Lv.{saveData.rodLevel})</div>
+          <div className="region-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <PixelRegionIcon size={16} />
+            <span>{currentRegion.name}</span>
+          </div>
+          <div className="gear-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <PixelFishingRodIcon size={14} />
+            <span>Starlight Caster (Lv.{saveData.rodLevel})</span>
+          </div>
         </div>
 
         {/* Mini Quest Tracker */}
         {activeQuest && (
           <div className="cosmic-panel mini-quest-card pointer-events-auto" onClick={onOpenQuests} style={{ cursor: 'pointer' }}>
-            <div className="mini-quest-title">Active Quest</div>
+            <div className="mini-quest-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <PixelQuestIcon size={16} />
+              <span>ACTIVE QUEST</span>
+            </div>
             <div className="mini-quest-desc">{activeQuest.title}</div>
-            <div style={{ fontSize: '12px', color: isQuestDone ? '#4ade80' : '#38bdf8', fontWeight: 600 }}>
-              {isQuestDone ? '★ Ready to Claim! (Visit Quest Board)' : `Progress: ${currentProgress} / ${activeQuest.targetCount}`}
+            <div style={{ fontSize: '11px', color: isQuestDone ? '#4ade80' : '#38bdf8', fontFamily: 'var(--font-heading)' }}>
+              {isQuestDone ? '★ READY TO CLAIM!' : `PROGRESS: ${currentProgress} / ${activeQuest.targetCount}`}
             </div>
           </div>
         )}

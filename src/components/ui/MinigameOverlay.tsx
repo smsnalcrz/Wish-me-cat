@@ -1,26 +1,18 @@
 import React from 'react';
-import { MinigameState } from '../../systems/fishing/FishingSystem';
-import { Heart, Sparkles, Zap } from 'lucide-react';
+import { MinigameState2D } from '../../game2d/fishing/FishingSystem2D';
+import { PixelStardustIcon } from './PixelIcons';
 
 interface MinigameOverlayProps {
-  minigame: MinigameState;
+  minigame: MinigameState2D;
   onActionClick: () => void;
 }
 
 export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onActionClick }) => {
-  // Clamp values cleanly within 2% to 98% of track so borders don't overflow
-  const safeZoneLeftPct = THREE_Math_clamp(
-    (minigame.safeZoneCenter - minigame.safeZoneWidth * 0.5) * 100,
-    1,
-    99 - minigame.safeZoneWidth * 100
-  );
+  const safeZoneLeftPct = Math.max(1, Math.min(99 - minigame.safeZoneWidth * 100, (minigame.safeZoneCenter - minigame.safeZoneWidth * 0.5) * 100));
   const safeZoneWidthPct = minigame.safeZoneWidth * 100;
-  const cursorLeftPct = THREE_Math_clamp(minigame.cursor * 100, 1.5, 98.5);
+  const cursorLeftPct = Math.max(1.5, Math.min(98.5, minigame.cursor * 100));
 
-  const progressPct = Math.min(
-    100,
-    Math.round((minigame.currentSuccesses / Math.max(1, minigame.requiredSuccesses)) * 100)
-  );
+  const progressPct = Math.min(100, Math.round((minigame.currentSuccesses / Math.max(1, minigame.requiredSuccesses)) * 100));
 
   return (
     <div
@@ -33,40 +25,29 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
       {/* Header Info */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={20} color="#fbbf24" style={{ animation: 'spin 4s linear infinite' }} />
-          <span style={{ fontSize: '16px', fontWeight: 700, color: '#fef08a', letterSpacing: '0.5px' }}>
-            {minigame.creatureName ? `REELING: ${minigame.creatureName}` : 'REELING CELESTIAL STAR'}
+          <PixelStardustIcon size={20} />
+          <span style={{ fontSize: '13px', fontFamily: 'var(--font-heading)', color: '#fef08a' }}>
+            {minigame.creatureName ? `REELING: ${minigame.creatureName.toUpperCase()}` : 'REELING CELESTIAL STAR'}
           </span>
           {minigame.creatureRarity && (
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                padding: '2px 8px',
-                borderRadius: '10px',
-                background: 'rgba(56, 189, 248, 0.2)',
-                border: '1px solid #38bdf8',
-                color: '#38bdf8'
-              }}
-            >
+            <span className={`rarity-badge rarity-${minigame.creatureRarity}`} style={{ fontSize: '9px', padding: '2px 6px' }}>
               {minigame.creatureRarity}
             </span>
           )}
         </div>
 
-        {/* Tension Hearts */}
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Tension:</span>
+        {/* Tension Pixel Blocks */}
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>TENSION:</span>
           {Array.from({ length: minigame.maxMisses }).map((_, i) => (
-            <Heart
+            <span
               key={i}
-              size={19}
-              fill={i < minigame.missesLeft ? '#f43f5e' : 'transparent'}
-              color={i < minigame.missesLeft ? '#f43f5e' : '#475569'}
               style={{
-                filter: i < minigame.missesLeft ? 'drop-shadow(0 0 6px #f43f5e)' : 'none',
-                transition: 'transform 0.15s ease'
+                width: '14px',
+                height: '14px',
+                background: i < minigame.missesLeft ? '#f43f5e' : '#1e1b4b',
+                boxShadow: i < minigame.missesLeft ? 'inset 0 -2px 0 0 #be123c, inset 0 2px 0 0 #fda4af' : 'none',
+                display: 'inline-block'
               }}
             />
           ))}
@@ -74,19 +55,18 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
       </div>
 
       {/* Progress Bar */}
-      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ flex: 1, height: '12px', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="exp-bar-bg" style={{ flex: 1, height: '14px' }}>
           <div
+            className="exp-bar-fill"
             style={{
               width: `${progressPct}%`,
-              height: '100%',
-              background: 'linear-gradient(90deg, #38bdf8, #818cf8, #c084fc)',
-              boxShadow: '0 0 12px #38bdf8',
-              transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+              background: '#0284c7',
+              boxShadow: 'inset 0 -2px 0 0 #0369a1, inset 0 2px 0 0 #38bdf8'
             }}
           />
         </div>
-        <span style={{ color: '#38bdf8', fontSize: '14px', fontWeight: 700, minWidth: '45px', textAlign: 'right' }}>
+        <span style={{ color: '#38bdf8', fontSize: '11px', fontFamily: 'var(--font-heading)', minWidth: '45px', textAlign: 'right' }}>
           {minigame.currentSuccesses}/{minigame.requiredSuccesses}
         </span>
       </div>
@@ -94,9 +74,9 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
       {/* REELING TIMING TRACK */}
       <div className="minigame-track">
         {/* Track Tick Guides */}
-        <div style={{ position: 'absolute', left: '25%', top: 0, bottom: 0, width: '1px', background: 'rgba(255,255,255,0.08)' }} />
-        <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: '1px', background: 'rgba(255,255,255,0.15)' }} />
-        <div style={{ position: 'absolute', left: '75%', top: 0, bottom: 0, width: '1px', background: 'rgba(255,255,255,0.08)' }} />
+        <div style={{ position: 'absolute', left: '25%', top: 0, bottom: 0, width: '2px', background: '#281f4a' }} />
+        <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: '2px', background: '#392b61' }} />
+        <div style={{ position: 'absolute', left: '75%', top: 0, bottom: 0, width: '2px', background: '#281f4a' }} />
 
         {/* Dynamic Safe Zone (Green/Cyan Target) */}
         <div
@@ -116,8 +96,7 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
               width: '4px',
               background: '#fef08a',
               boxShadow: '0 0 8px #facc15',
-              transform: 'translateX(-50%)',
-              opacity: 0.85
+              transform: 'translateX(-50%)'
             }}
           />
           <span
@@ -126,15 +105,13 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
               bottom: '2px',
               left: '50%',
               transform: 'translateX(-50%)',
-              fontSize: '10px',
-              fontWeight: 700,
-              letterSpacing: '1px',
+              fontSize: '9px',
+              fontFamily: 'var(--font-heading)',
               color: '#a7f3d0',
-              pointerEvents: 'none',
-              textShadow: '0 0 5px rgba(0,0,0,0.8)'
+              pointerEvents: 'none'
             }}
           >
-            CATCH ZONE
+            CATCH
           </span>
         </div>
 
@@ -145,39 +122,31 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
             left: `${cursorLeftPct}%`
           }}
         >
-          {/* Top Star Crest */}
           <div className="cursor-star-crest">★</div>
-          {/* Center hairline indicator */}
           <div className="cursor-hairline" />
         </div>
       </div>
 
       {/* Action / Feedback Status */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
-        <div style={{ minHeight: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ minHeight: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heading)', fontSize: '11px' }}>
           {minigame.lastAction === 'perfect' && (
-            <span style={{ color: '#facc15', fontWeight: 800, fontSize: '18px', textShadow: '0 0 14px #facc15' }}>
-              ★ PERFECT TIMING! (+2 REEL) ★
-            </span>
+            <span style={{ color: '#facc15' }}>★ PERFECT TIMING! (+2 REEL) ★</span>
           )}
           {minigame.lastAction === 'hit' && (
-            <span style={{ color: '#4ade80', fontWeight: 800, fontSize: '17px', textShadow: '0 0 10px #4ade80' }}>
-              GOOD CATCH! (+1 REEL)
-            </span>
+            <span style={{ color: '#4ade80' }}>GOOD CATCH! (+1 REEL)</span>
           )}
           {minigame.lastAction === 'miss' && (
-            <span style={{ color: '#f43f5e', fontWeight: 800, fontSize: '17px', textShadow: '0 0 12px #f43f5e' }}>
-              MISS! LINE TENSION DROPPED!
-            </span>
+            <span style={{ color: '#f43f5e' }}>MISS! LINE TENSION DROPPED!</span>
           )}
           {!minigame.lastAction && (
             <span className="minigame-instruction">
-              PRESS <strong style={{ color: '#facc15' }}>[SPACE]</strong> OR <strong style={{ color: '#facc15' }}>CLICK</strong> WHEN YELLOW BAR IS IN CATCH ZONE!
+              PRESS <strong style={{ color: '#facc15' }}>[SPACE]</strong> OR <strong style={{ color: '#facc15' }}>CLICK</strong> IN CATCH ZONE!
             </span>
           )}
         </div>
 
-        {/* Big Tactile Reel Button */}
+        {/* Big Pixel Reel Button */}
         <button
           className="reel-action-button"
           onPointerDown={(e) => {
@@ -185,14 +154,9 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
             onActionClick();
           }}
         >
-          <Zap size={18} fill="#facc15" color="#facc15" />
-          <span>REEL IN! (SPACE / CLICK)</span>
+          <span>✦ REEL IN! (SPACE / CLICK) ✦</span>
         </button>
       </div>
     </div>
   );
 };
-
-function THREE_Math_clamp(val: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, val));
-}

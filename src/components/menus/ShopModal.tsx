@@ -3,7 +3,7 @@ import { SaveData, EquipmentType } from '../../types/game';
 import { EQUIPMENT, getUpgradeCost, getStatValue } from '../../data/equipment';
 import { SaveManager } from '../../systems/save/SaveManager';
 import { AudioManager } from '../../systems/audio/AudioManager';
-import { X, Sparkles, Check, ArrowRight } from 'lucide-react';
+import { PixelCloseIcon, PixelStardustIcon, PixelShopIcon } from '../ui/PixelIcons';
 
 interface ShopModalProps {
   saveData: SaveData;
@@ -46,15 +46,18 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
 
   return (
     <div className="modal-backdrop">
-      <div className="cosmic-panel modal-card">
+      <div className="cosmic-panel modal-card pixel-panel" style={{ maxWidth: '600px' }}>
         {/* Header */}
         <div className="modal-header">
-          <div className="modal-title">Cosmic Angler Equipment Shop</div>
-          <button className="close-btn" onClick={onClose}><X size={22} /></button>
+          <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <PixelShopIcon size={22} />
+            <span>COSMIC GEAR EMPORIUM</span>
+          </div>
+          <button className="close-btn" onClick={onClose}><PixelCloseIcon size={18} /></button>
         </div>
 
         {/* Category Tabs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
           {(['rod', 'line', 'bait', 'bobber'] as EquipmentType[]).map((type) => {
             const eq = EQUIPMENT[type];
             const isSelected = selectedType === type;
@@ -63,54 +66,55 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
                 key={type}
                 onClick={() => { setSelectedType(type); audio.playClick(); }}
                 style={{
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: isSelected ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
-                  background: isSelected ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255,255,255,0.04)',
-                  color: isSelected ? '#38bdf8' : '#cbd5e1',
-                  fontWeight: 700,
-                  fontSize: '14px',
+                  padding: '8px 4px',
+                  border: 'none',
+                  background: isSelected ? '#38bdf8' : '#1e1b4b',
+                  color: isSelected ? '#0f172a' : '#cbd5e1',
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: '10px',
                   cursor: 'pointer',
-                  fontFamily: 'inherit'
+                  boxShadow: isSelected
+                    ? '0 -2px 0 0 #7dd3fc, 0 2px 0 0 #0284c7, -2px 0 0 0 #7dd3fc, 2px 0 0 0 #0284c7'
+                    : '0 -2px 0 0 #312e81, 0 2px 0 0 #0f172a, -2px 0 0 0 #312e81, 2px 0 0 0 #0f172a'
                 }}
               >
-                {eq.name.split(' ')[0]}
+                {eq.name.split(' ')[0].toUpperCase()}
               </button>
             );
           })}
         </div>
 
         {/* Item Details Box */}
-        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '20px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '22px', fontWeight: 700, color: '#f8fafc', marginBottom: '6px' }}>
-            {data.name}
+        <div style={{ background: '#0a081a', padding: '16px', border: '2px solid #281f4a' }}>
+          <div style={{ fontSize: '15px', fontFamily: 'var(--font-heading)', color: '#fef08a', marginBottom: '6px' }}>
+            {data.name.toUpperCase()}
           </div>
-          <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: 1.5, marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.5, marginBottom: '14px' }}>
             {data.description}
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '16px', color: '#e2e8f0' }}>Tier Level:</span>
-            <span style={{ fontSize: '18px', fontWeight: 700, color: '#fbbf24' }}>
-              Level {currentLevel} {isMaxLevel && '(MAX)'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', fontFamily: 'var(--font-heading)', fontSize: '11px' }}>
+            <span style={{ color: '#cbd5e1' }}>TIER LEVEL:</span>
+            <span style={{ color: '#fbbf24' }}>
+              LEVEL {currentLevel} {isMaxLevel && '(MAX)'}
             </span>
           </div>
 
           {/* Stat Progression comparison */}
-          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '14px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: '#14102d', padding: '12px', border: '1px solid #281f4a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: '12px', color: '#94a3b8' }}>Current {data.statName}</div>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: '#38bdf8' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>CURRENT {data.statName.toUpperCase()}</div>
+              <div style={{ fontSize: '16px', fontFamily: 'var(--font-heading)', color: '#38bdf8' }}>
                 {currentStat}{data.statUnit}
               </div>
             </div>
 
             {!isMaxLevel && (
               <>
-                <ArrowRight size={20} color="#a855f7" />
+                <span style={{ color: '#a855f7', fontFamily: 'var(--font-heading)' }}>▶</span>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>Next Tier</div>
-                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#4ade80' }}>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>NEXT TIER</div>
+                  <div style={{ fontSize: '16px', fontFamily: 'var(--font-heading)', color: '#4ade80' }}>
                     {nextStat}{data.statUnit}
                   </div>
                 </div>
@@ -120,11 +124,12 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
         </div>
 
         {/* Footer with Cost & Action */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
           <div>
-            <div style={{ fontSize: '13px', color: '#94a3b8' }}>Upgrade Cost:</div>
-            <div style={{ fontSize: '22px', fontWeight: 700, color: canAfford ? '#fbbf24' : '#f43f5e' }}>
-              {isMaxLevel ? 'Maximum Level Reached' : `${cost.toLocaleString()} Stardust`}
+            <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>UPGRADE COST:</div>
+            <div style={{ fontSize: '14px', fontFamily: 'var(--font-heading)', color: canAfford ? '#fbbf24' : '#f43f5e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <PixelStardustIcon size={16} />
+              <span>{isMaxLevel ? 'MAX TIER' : `${cost.toLocaleString()} STARDUST`}</span>
             </div>
           </div>
 
@@ -134,8 +139,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
             onClick={handleUpgrade}
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <Sparkles size={18} />
-            {isMaxLevel ? 'MAX TIER' : 'Upgrade Equipment'}
+            {isMaxLevel ? '✦ MAX TIER ✦' : '✦ UPGRADE GEAR ✦'}
           </button>
         </div>
       </div>

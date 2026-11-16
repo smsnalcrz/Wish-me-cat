@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SaveData } from '../../types/game';
 import { DeviceInfo, toggleFullscreen } from '../../utils/deviceDetection';
-import { Sparkles, Play, RotateCcw, Volume2, VolumeX, Maximize, Smartphone, Monitor } from 'lucide-react';
+import { PixelStardustIcon, PixelCatIcon, PixelAudioIcon } from './PixelIcons';
 
 interface WelcomeScreenProps {
   deviceInfo: DeviceInfo;
@@ -36,37 +36,28 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       <div className="welcome-bg-glow" />
 
       {/* Main Welcome Content Card */}
-      <div className="cosmic-panel welcome-card">
+      <div className="cosmic-panel welcome-card pixel-panel">
         {/* Device & Browser Badge */}
         <div className="platform-badge-container">
           <div className="platform-badge">
             <span className="live-indicator-dot" />
-            <span className="platform-icon">{deviceInfo.badgeIcon}</span>
-            <span className="platform-text">{deviceInfo.badgeLabel}</span>
+            <span className="platform-text">{deviceInfo.badgeLabel.toUpperCase()}</span>
           </div>
 
           <div className="control-mode-pill">
-            {deviceInfo.isTouch ? (
-              <>
-                <Smartphone size={13} />
-                <span>Touch Controls Ready</span>
-              </>
-            ) : (
-              <>
-                <Monitor size={13} />
-                <span>WASD & Mouse Active</span>
-              </>
-            )}
+            <span>{deviceInfo.isTouch ? 'TOUCH CONTROLS READY' : 'WASD / ARROWS & MOUSE'}</span>
           </div>
         </div>
 
         {/* Title Logo & Subtitle */}
         <div className="welcome-header">
-          <div className="game-star-crest">
-            <span>✨ 🐱 🎣 ✨</span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
+            <PixelStardustIcon size={24} />
+            <PixelCatIcon size={24} />
+            <PixelStardustIcon size={24} />
           </div>
-          <h1 className="welcome-title">PURRSEIDS</h1>
-          <div className="welcome-subtitle">THE STARPOND</div>
+          <h1 className="welcome-title">WISH ME CAT</h1>
+          <div className="welcome-subtitle">PURRSEIDS: THE STARPOND</div>
           <p className="welcome-tagline">
             Cast your line into mystical pools of galaxies and fish for living stars with your celestial cat companion.
           </p>
@@ -76,20 +67,20 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         {hasExistingSave && !showResetConfirm && (
           <div className="save-status-box">
             <div className="save-status-header">
-              <span className="save-status-badge">✦ SAVED JOURNEY FOUND</span>
-              <span className="save-breed-name">🐱 {saveData.catBreed ? saveData.catBreed.toUpperCase() : 'CELESTIAL'}</span>
+              <span className="save-status-badge">★ SAVED JOURNEY FOUND</span>
+              <span className="save-breed-name">{saveData.catBreed ? saveData.catBreed.toUpperCase() : 'CELESTIAL'}</span>
             </div>
             <div className="save-stats-row">
               <div className="save-stat">
-                <span className="save-stat-label">Level</span>
-                <span className="save-stat-val">Lv.{saveData.playerLevel}</span>
+                <span className="save-stat-label">LEVEL</span>
+                <span className="save-stat-val">LV.{saveData.playerLevel}</span>
               </div>
               <div className="save-stat">
-                <span className="save-stat-label">Stardust</span>
+                <span className="save-stat-label">STARDUST</span>
                 <span className="save-stat-val">⭐ {saveData.stardust.toLocaleString()}</span>
               </div>
               <div className="save-stat">
-                <span className="save-stat-label">Species</span>
+                <span className="save-stat-label">SPECIES</span>
                 <span className="save-stat-val">🐟 {saveData.discoveredCreatureIds ? saveData.discoveredCreatureIds.length : 0}</span>
               </div>
             </div>
@@ -99,9 +90,9 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         {/* Reset Confirmation */}
         {showResetConfirm && (
           <div className="reset-confirm-box">
-            <div style={{ color: '#f87171', fontWeight: 700, marginBottom: '6px' }}>Reset all game progress?</div>
-            <div style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '12px' }}>
-              This will clear your cat levels, stardust, bestiary, and start from the beginning.
+            <div style={{ color: '#f87171', fontFamily: 'var(--font-heading)', fontSize: '11px', marginBottom: '6px' }}>RESET ALL PROGRESS?</div>
+            <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '10px' }}>
+              This will clear levels, stardust, bestiary, and start fresh.
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
               <button
@@ -110,15 +101,16 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   onResetSave();
                   setShowResetConfirm(false);
                 }}
+                style={{ padding: '6px 12px', fontSize: '10px', background: '#dc2626' }}
               >
-                Yes, Start Fresh
+                YES, RESET
               </button>
               <button
                 className="cosmic-button"
                 onClick={() => setShowResetConfirm(false)}
-                style={{ background: 'rgba(255,255,255,0.1)' }}
+                style={{ padding: '6px 12px', fontSize: '10px', background: '#334155' }}
               >
-                Cancel
+                CANCEL
               </button>
             </div>
           </div>
@@ -127,8 +119,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         {/* Main Action Buttons */}
         <div className="welcome-actions">
           <button className="cosmic-button start-journey-btn" onClick={onStartGame}>
-            <Play size={20} fill="#ffffff" />
-            <span>{hasExistingSave ? 'CONTINUE JOURNEY' : 'ENTER THE STARPOND'}</span>
+            <span>{hasExistingSave ? '▶ CONTINUE JOURNEY' : '✦ ENTER THE STARPOND ✦'}</span>
           </button>
 
           {hasExistingSave && !showResetConfirm && (
@@ -136,9 +127,9 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               className="text-action-btn"
               onClick={() => setShowResetConfirm(true)}
               title="Start a new game"
+              style={{ fontFamily: 'var(--font-heading)', fontSize: '9px' }}
             >
-              <RotateCcw size={14} />
-              <span>Start New Journey</span>
+              <span>↺ START NEW JOURNEY</span>
             </button>
           )}
         </div>
@@ -146,13 +137,12 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         {/* Quick Settings Bar (Mute & Fullscreen) */}
         <div className="welcome-footer-bar">
           <button className="icon-setting-btn" onClick={onToggleMute} title={isMuted ? "Unmute Audio" : "Mute Audio"}>
-            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            <span>{isMuted ? 'Muted' : 'Audio On'}</span>
+            <PixelAudioIcon size={16} isMuted={isMuted} />
+            <span>{isMuted ? 'MUTED' : 'AUDIO ON'}</span>
           </button>
 
           <button className="icon-setting-btn" onClick={handleFullscreenClick} title="Toggle Fullscreen">
-            <Maximize size={18} />
-            <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+            <span>{isFullscreen ? 'WINDOWED' : 'FULLSCREEN'}</span>
           </button>
         </div>
       </div>

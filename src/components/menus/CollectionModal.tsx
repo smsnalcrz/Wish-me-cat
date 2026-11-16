@@ -3,7 +3,7 @@ import { SaveData, CelestialCreature } from '../../types/game';
 import { CREATURES } from '../../data/creatures';
 import { generateCreatureSprite } from '../../game2d/rendering/PixelSprites';
 import { AudioManager } from '../../systems/audio/AudioManager';
-import { X, Sparkles, HelpCircle } from 'lucide-react';
+import { PixelCloseIcon, PixelAlmanacIcon } from '../ui/PixelIcons';
 
 interface CollectionModalProps {
   saveData: SaveData;
@@ -22,22 +22,25 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ saveData, onCl
 
   return (
     <div className="modal-backdrop">
-      <div className="cosmic-panel modal-card" style={{ maxWidth: '820px' }}>
+      <div className="cosmic-panel modal-card pixel-panel" style={{ maxWidth: '780px' }}>
         {/* Header */}
         <div className="modal-header">
           <div>
-            <div className="modal-title">Star Collection Almanac</div>
-            <div style={{ fontSize: '14px', color: '#38bdf8', marginTop: '2px' }}>
-              {discoveredCount} / {totalCount} Celestial Species Discovered ({Math.round((discoveredCount/totalCount)*100)}%)
+            <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <PixelAlmanacIcon size={22} />
+              <span>STAR ALMANAC</span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#38bdf8', fontFamily: 'var(--font-heading)', marginTop: '4px' }}>
+              {discoveredCount} / {totalCount} SPECIES CATALOGED ({Math.round((discoveredCount/totalCount)*100)}%)
             </div>
           </div>
-          <button className="close-btn" onClick={onClose}><X size={22} /></button>
+          <button className="close-btn" onClick={onClose}><PixelCloseIcon size={18} /></button>
         </div>
 
         {/* Content Body: Left Grid & Right Inspector */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px' }}>
           {/* Left Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
             {CREATURES.map((creature) => {
               const discovered = saveData.discoveredCreatureIds.includes(creature.id);
               const isSelected = selectedCreature.id === creature.id;
@@ -47,47 +50,43 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ saveData, onCl
                   key={creature.id}
                   onClick={() => { setSelectedCreature(creature); audio.playClick(); }}
                   style={{
-                    padding: '14px',
-                    borderRadius: '12px',
-                    border: isSelected ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.08)',
-                    background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0,0,0,0.3)',
+                    padding: '10px',
+                    border: isSelected ? '2px solid #38bdf8' : '2px solid #281f4a',
+                    background: isSelected ? '#1e245a' : '#100d24',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
-                    transition: 'all 0.2s ease'
+                    gap: '10px'
                   }}
                 >
                   <div
                     style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '8px',
-                      background: discovered ? 'rgba(0,0,0,0.5)' : '#1e1b4b',
+                      width: '36px',
+                      height: '36px',
+                      background: '#090817',
+                      border: '1px solid #392b61',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: discovered ? `0 0 10px ${creature.glowColor}` : 'none',
-                      border: discovered ? `1px solid ${creature.glowColor}` : '1px solid rgba(255,255,255,0.08)'
+                      justifyContent: 'center'
                     }}
                   >
                     {discovered ? (
                       <img
                         src={generateCreatureSprite(creature.modelType, creature.rarity).toDataURL()}
                         alt={creature.name}
-                        style={{ width: '32px', height: '32px', imageRendering: 'pixelated' }}
+                        style={{ width: '28px', height: '28px', imageRendering: 'pixelated' }}
                       />
                     ) : (
-                      <HelpCircle size={22} color="#475569" />
+                      <span style={{ fontFamily: 'var(--font-heading)', fontSize: '14px', color: '#64748b' }}>?</span>
                     )}
                   </div>
 
                   <div>
-                    <div style={{ fontSize: '15px', fontWeight: 700, color: discovered ? '#f8fafc' : '#64748b' }}>
-                      {discovered ? creature.name : '??? (Unknown Star)'}
+                    <div style={{ fontSize: '11px', fontFamily: 'var(--font-heading)', color: discovered ? '#f8fafc' : '#64748b' }}>
+                      {discovered ? creature.name.toUpperCase() : '???'}
                     </div>
-                    <span className={`rarity-badge rarity-${creature.rarity}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
-                      {discovered ? creature.rarity : 'Uncataloged'}
+                    <span className={`rarity-badge rarity-${creature.rarity}`} style={{ fontSize: '9px', padding: '1px 6px', marginTop: '2px', display: 'inline-block' }}>
+                      {discovered ? creature.rarity : 'UNKNOWN'}
                     </span>
                   </div>
                 </div>
@@ -96,53 +95,53 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ saveData, onCl
           </div>
 
           {/* Right Inspector Box */}
-          <div style={{ background: 'rgba(0,0,0,0.35)', padding: '20px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ background: '#0a081a', padding: '16px', border: '2px solid #281f4a', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {isSelectedDiscovered ? (
               <>
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
                   <img
                     src={generateCreatureSprite(selectedCreature.modelType, selectedCreature.rarity).toDataURL()}
                     alt={selectedCreature.name}
-                    style={{ width: '72px', height: '72px', imageRendering: 'pixelated', filter: `drop-shadow(0 0 10px ${selectedCreature.glowColor})` }}
+                    style={{ width: '64px', height: '64px', imageRendering: 'pixelated', filter: `drop-shadow(0 0 10px ${selectedCreature.glowColor})` }}
                   />
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 700, color: selectedCreature.glowColor }}>
-                    {selectedCreature.name}
+                  <div style={{ fontSize: '14px', fontFamily: 'var(--font-heading)', color: selectedCreature.glowColor }}>
+                    {selectedCreature.name.toUpperCase()}
                   </div>
                   <span className={`rarity-badge rarity-${selectedCreature.rarity}`}>
                     {selectedCreature.rarity}
                   </span>
                 </div>
 
-                <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.5 }}>
                   {selectedCreature.description}
                 </p>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
+                <div style={{ borderTop: '2px solid #281f4a', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px', fontFamily: 'var(--font-heading)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Total Catches:</span>
+                    <span style={{ color: '#94a3b8' }}>TOTAL CATCHES:</span>
                     <strong style={{ color: '#f8fafc' }}>{selectedRecord?.count || 1}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Largest Recorded:</span>
-                    <strong style={{ color: '#fbbf24' }}>{selectedRecord?.maxWeight || selectedCreature.minWeight} light-grams</strong>
+                    <span style={{ color: '#94a3b8' }}>RECORD WEIGHT:</span>
+                    <strong style={{ color: '#fbbf24' }}>{selectedRecord?.maxWeight || selectedCreature.minWeight} LG</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Variants Discovered:</span>
+                    <span style={{ color: '#94a3b8' }}>VARIANTS:</span>
                     <strong style={{ color: '#c084fc' }}>
-                      {selectedRecord?.variants.length ? selectedRecord.variants.join(', ') : 'Normal'}
+                      {selectedRecord?.variants.length ? selectedRecord.variants.join(', ').toUpperCase() : 'NORMAL'}
                     </strong>
                   </div>
                 </div>
               </>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', gap: '12px' }}>
-                <HelpCircle size={48} color="#475569" />
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#94a3b8' }}>Mystery Star Entity</div>
-                <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.5 }}>
-                  Cast your line into the Starpond with better cosmic bait to discover this celestial creature!
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '32px', color: '#475569', fontFamily: 'var(--font-heading)' }}>?</span>
+                <div style={{ fontSize: '12px', fontFamily: 'var(--font-heading)', color: '#94a3b8' }}>MYSTERY STAR ENTITY</div>
+                <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>
+                  Cast your line into the Starpond with better cosmic bait to catalog this celestial creature!
                 </p>
               </div>
             )}

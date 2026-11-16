@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GameState } from '../../types/game';
-import { Zap, Sparkles } from 'lucide-react';
+import { PixelFishingRodIcon, PixelStardustIcon } from './PixelIcons';
 
 interface MobileControlsProps {
   gameState: GameState;
@@ -26,7 +26,7 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
   const joystickBaseRef = useRef<HTMLDivElement>(null);
   const touchIdRef = useRef<number | null>(null);
   const centerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const maxRadius = 55; // pixels max deflection
+  const maxRadius = 50;
 
   const isExploring = gameState === 'exploring';
   const isFishingMinigame = gameState === 'bite' || gameState === 'minigame';
@@ -63,7 +63,6 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
 
     setKnobPos({ x: clampedX, y: clampedY });
 
-    // Normalized vector: -1 to 1 (Y: negative is forward)
     const normX = clampedX / maxRadius;
     const normY = clampedY / maxRadius;
 
@@ -106,95 +105,81 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
     };
   }, [handleJoystickTouchMove, handleJoystickTouchEnd]);
 
-  const toggleSprint = (e: React.TouchEvent | React.MouseEvent) => {
-    e.stopPropagation();
-    setIsRunning(prev => {
-      const next = !prev;
-      // Re-trigger movement with new sprint speed
-      if (knobPos.x !== 0 || knobPos.y !== 0) {
-        onMoveVector({ x: knobPos.x / maxRadius, y: knobPos.y / maxRadius }, next);
-      }
-      return next;
-    });
-  };
-
   if (!isVisible) return null;
 
   return (
-    <div className="mobile-controls-layer pointer-events-none">
-      {/* 1. Virtual Analog Joystick (Bottom Left) */}
+    <div className="mobile-controls-layer">
+      {/* 1. Stepped Pixel D-Pad / Joystick (Bottom Left) */}
       {isExploring && (
         <div
           ref={joystickBaseRef}
-          className={`virtual-joystick-base pointer-events-auto ${isJoystickActive ? 'active' : ''}`}
+          className="mobile-joystick-base"
           onTouchStart={handleJoystickTouchStart}
+          style={{
+            position: 'absolute',
+            bottom: '30px',
+            left: '30px',
+            width: '120px',
+            height: '120px',
+            background: '#09081a',
+            border: '2px solid #281f4a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'auto'
+          }}
         >
-          {/* Inner Glowing Knob */}
           <div
-            className="virtual-joystick-knob"
             style={{
-              transform: `translate(${knobPos.x}px, ${knobPos.y}px)`
+              position: 'absolute',
+              transform: `translate(${knobPos.x}px, ${knobPos.y}px)`,
+              width: '44px',
+              height: '44px',
+              background: isJoystickActive ? '#38bdf8' : '#1e1b4b',
+              boxShadow: isJoystickActive
+                ? '0 -2px 0 0 #7dd3fc, 0 2px 0 0 #0284c7, -2px 0 0 0 #7dd3fc, 2px 0 0 0 #0284c7'
+                : '0 -2px 0 0 #312e81, 0 2px 0 0 #0f172a, -2px 0 0 0 #312e81, 2px 0 0 0 #0f172a'
             }}
-          >
-            <div className="knob-crest">🐾</div>
-          </div>
+          />
         </div>
       )}
 
-      {/* 2. Floating Action Buttons (Bottom Right) */}
-      <div className="mobile-actions-container pointer-events-auto">
-        {/* Sprint Toggle Button */}
-        {isExploring && (
-          <button
-            className={`mobile-action-btn sprint-btn ${isRunning ? 'sprint-active' : ''}`}
-            onTouchStart={toggleSprint}
-            onClick={toggleSprint}
-            title="Toggle Sprint"
-          >
-            <Zap size={22} fill={isRunning ? "#facc15" : "none"} />
-            <span className="mobile-btn-label">{isRunning ? 'SPRINT' : 'WALK'}</span>
-          </button>
-        )}
-
+      {/* 2. Floating Pixel Action Buttons (Bottom Right) */}
+      <div
+        className="pointer-events-auto"
+        style={{
+          position: 'absolute',
+          bottom: '30px',
+          right: '30px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          alignItems: 'flex-end'
+        }}
+      >
         {/* Primary Interact / Cast Button */}
         {isExploring && interactionPrompt && (
           <button
-            className="mobile-action-btn interact-primary-btn"
-            onTouchStart={(e) => {
-              e.stopPropagation();
-              onInteract();
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onInteract();
-            }}
-            title={interactionPrompt}
+            className="cosmic-button"
+            onTouchStart={(e) => { e.stopPropagation(); onInteract(); }}
+            onClick={(e) => { e.stopPropagation(); onInteract(); }}
+            style={{ padding: '12px 18px', background: '#0284c7', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <span style={{ fontSize: '24px' }}>🎣</span>
-            <span className="mobile-btn-label">
-              {interactionPrompt.includes('Fish') ? 'CAST ROD' : 'INTERACT'}
-            </span>
+            <PixelFishingRodIcon size={18} />
+            <span>{interactionPrompt.includes('Fish') ? 'CAST ROD' : 'INTERACT'}</span>
           </button>
         )}
 
         {/* Reeling Minigame Action Button */}
         {isFishingMinigame && (
           <button
-            className="mobile-action-btn reel-pulse-btn"
-            onTouchStart={(e) => {
-              e.stopPropagation();
-              onMinigameAction();
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMinigameAction();
-            }}
-            title="Reel In!"
+            className="cosmic-button"
+            onTouchStart={(e) => { e.stopPropagation(); onMinigameAction(); }}
+            onClick={(e) => { e.stopPropagation(); onMinigameAction(); }}
+            style={{ padding: '14px 22px', background: '#f59e0b', color: '#000', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <Sparkles size={28} />
-            <span className="mobile-btn-label" style={{ fontWeight: 800, fontSize: '13px' }}>
-              REEL IN!
-            </span>
+            <PixelStardustIcon size={20} color="#000" />
+            <span>✦ REEL IN! ✦</span>
           </button>
         )}
       </div>

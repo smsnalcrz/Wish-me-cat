@@ -1,10 +1,17 @@
 /**
  * Station2D.ts
  * 2D Interactive Stations & Fishing Piers for Wish Me Cat.
- * Renders pixel-art buildings, altars, gateways, and piers with proximity interaction indicators.
+ * Renders authentic pixel-art buildings, altars, gateways, and piers with proximity interaction indicators.
  */
 
 import { Camera2D } from '../core/Camera2D';
+import {
+  generateEmporiumShopSprite,
+  generateQuestBoardSprite,
+  generateConstellationAltarSprite,
+  generateAlmanacPedestalSprite,
+  generateRealmGatewaySprite
+} from '../rendering/PixelSprites';
 
 export interface InteractiveStation2D {
   id: string;
@@ -77,46 +84,65 @@ export class StationManager2D {
       name: 'Starlight South Pier',
       prompt: 'Press [E] to Fish at South Pier',
       x: 0,
-      y: 135,
+      y: 130,
       radius: 32,
       type: 'pier',
       pierDirection: 'up',
-      castTarget: { x: 0, y: 40 }
+      castTarget: { x: 0, y: 35 }
     },
     {
       id: 'pier_north',
       name: 'Aurora North Overlook',
       prompt: 'Press [E] to Fish at North Pier',
       x: 0,
-      y: -135,
+      y: -130,
       radius: 32,
       type: 'pier',
       pierDirection: 'down',
-      castTarget: { x: 0, y: -40 }
+      castTarget: { x: 0, y: -35 }
     },
     {
       id: 'pier_east',
       name: 'Moonlit East Jetty',
       prompt: 'Press [E] to Fish at East Pier',
-      x: 155,
+      x: 145,
       y: 0,
       radius: 32,
       type: 'pier',
       pierDirection: 'left',
-      castTarget: { x: 50, y: 0 }
+      castTarget: { x: 45, y: 0 }
     },
     {
       id: 'pier_west',
-      name: 'Whispering West Bank',
+      name: 'Twilight West Jetty',
       prompt: 'Press [E] to Fish at West Pier',
-      x: -155,
+      x: -145,
       y: 0,
       radius: 32,
       type: 'pier',
       pierDirection: 'right',
-      castTarget: { x: -50, y: 0 }
+      castTarget: { x: -45, y: 0 }
     }
   ];
+
+  // Cached Pixel Sprites
+  private shopCanvas: HTMLCanvasElement | null = null;
+  private questCanvas: HTMLCanvasElement | null = null;
+  private altarCanvas: HTMLCanvasElement | null = null;
+  private almanacCanvas: HTMLCanvasElement | null = null;
+  private portalCanvas: HTMLCanvasElement | null = null;
+
+  constructor() {
+    this.initSprites();
+  }
+
+  private initSprites(): void {
+    this.shopCanvas = generateEmporiumShopSprite();
+    this.questCanvas = generateQuestBoardSprite();
+    this.altarCanvas = generateConstellationAltarSprite();
+    this.almanacCanvas = generateAlmanacPedestalSprite();
+    this.portalCanvas = generateRealmGatewaySprite();
+  }
 
   public getNearestStation(catX: number, catY: number): InteractiveStation2D | null {
     let nearest: InteractiveStation2D | null = null;
@@ -141,152 +167,127 @@ export class StationManager2D {
 
     switch (station.type) {
       case 'pier': {
-        // Wooden Pier Planks
-        ctx.fillStyle = '#6b4423';
-        const w = (station.pierDirection === 'up' || station.pierDirection === 'down') ? 22 * scale : 34 * scale;
-        const h = (station.pierDirection === 'up' || station.pierDirection === 'down') ? 34 * scale : 22 * scale;
-        ctx.fillRect(screen.x - w / 2, screen.y - h / 2, w, h);
+        // Handcrafted Wooden Pier Planks
+        const isVertical = station.pierDirection === 'up' || station.pierDirection === 'down';
+        const pw = isVertical ? 26 * scale : 42 * scale;
+        const ph = isVertical ? 42 * scale : 26 * scale;
 
-        // Plank separation lines
+        // Pier Stilt Water Shadows
+        ctx.fillStyle = 'rgba(5, 3, 15, 0.6)';
+        ctx.fillRect(screen.x - pw / 2 + 2 * scale, screen.y - ph / 2 + 4 * scale, pw, ph);
+
+        // Main Plank Deck
+        ctx.fillStyle = '#6b4423';
+        ctx.fillRect(screen.x - pw / 2, screen.y - ph / 2, pw, ph);
+
+        // Individual Planks with woodgrain lines
         ctx.fillStyle = '#3d251e';
-        if (station.pierDirection === 'up' || station.pierDirection === 'down') {
-          for (let p = -12; p <= 12; p += 6) {
-            ctx.fillRect(screen.x - w / 2, screen.y + p * scale, w, 1 * scale);
+        if (isVertical) {
+          for (let p = -18; p <= 18; p += 6) {
+            ctx.fillRect(screen.x - pw / 2, screen.y + p * scale, pw, 1.5 * scale);
+            // Nail heads
+            ctx.fillStyle = '#1c1917';
+            ctx.fillRect(screen.x - pw / 2 + 3 * scale, screen.y + p * scale - 2 * scale, 1.5 * scale, 1.5 * scale);
+            ctx.fillRect(screen.x + pw / 2 - 4 * scale, screen.y + p * scale - 2 * scale, 1.5 * scale, 1.5 * scale);
+            ctx.fillStyle = '#3d251e';
           }
         } else {
-          for (let p = -12; p <= 12; p += 6) {
-            ctx.fillRect(screen.x + p * scale, screen.y - h / 2, 1 * scale, h);
+          for (let p = -18; p <= 18; p += 6) {
+            ctx.fillRect(screen.x + p * scale, screen.y - ph / 2, 1.5 * scale, ph);
+            // Nail heads
+            ctx.fillStyle = '#1c1917';
+            ctx.fillRect(screen.x + p * scale - 2 * scale, screen.y - ph / 2 + 3 * scale, 1.5 * scale, 1.5 * scale);
+            ctx.fillRect(screen.x + p * scale - 2 * scale, screen.y - ph / 2 - 4 * scale, 1.5 * scale, 1.5 * scale);
+            ctx.fillStyle = '#3d251e';
           }
         }
 
-        // Lantern on pier post
+        // Mooring Post with Brass Lantern at pier edge
+        const lanternScreenX = isVertical ? screen.x : (station.pierDirection === 'left' ? screen.x - pw / 2 + 4 * scale : screen.x + pw / 2 - 4 * scale);
+        const lanternScreenY = isVertical ? (station.pierDirection === 'up' ? screen.y - ph / 2 + 4 * scale : screen.y + ph / 2 - 4 * scale) : screen.y;
+
+        // Post
+        ctx.fillStyle = '#2d1810';
+        ctx.fillRect(lanternScreenX - 3 * scale, lanternScreenY - 14 * scale, 6 * scale, 16 * scale);
+
+        // Warm Glowing Lantern Bulb
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.3)';
+        ctx.fillRect(lanternScreenX - 6 * scale, lanternScreenY - 18 * scale, 12 * scale, 12 * scale);
         ctx.fillStyle = '#fbbf24';
-        ctx.beginPath();
-        ctx.arc(screen.x, screen.y, 3 * scale, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(lanternScreenX - 2.5 * scale, lanternScreenY - 15 * scale, 5 * scale, 6 * scale);
+        ctx.fillStyle = '#fffbeb';
+        ctx.fillRect(lanternScreenX - 1 * scale, lanternScreenY - 14 * scale, 2 * scale, 2 * scale);
         break;
       }
 
       case 'shop': {
-        // Cosmic Gear Emporium Kiosk
-        ctx.fillStyle = '#4c1d95';
-        ctx.fillRect(screen.x - 24 * scale, screen.y - 28 * scale, 48 * scale, 34 * scale);
-
-        // Striped awning
-        ctx.fillStyle = '#f472b6';
-        ctx.fillRect(screen.x - 26 * scale, screen.y - 32 * scale, 52 * scale, 10 * scale);
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(screen.x - 18 * scale, screen.y - 32 * scale, 8 * scale, 10 * scale);
-        ctx.fillRect(screen.x + 10 * scale, screen.y - 32 * scale, 8 * scale, 10 * scale);
-
-        // Counter & Display Goods
-        ctx.fillStyle = '#6b4423';
-        ctx.fillRect(screen.x - 20 * scale, screen.y - 6 * scale, 40 * scale, 10 * scale);
-
-        // Golden rod display on counter
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(screen.x - 12 * scale, screen.y - 12 * scale, 24 * scale, 2 * scale);
+        if (this.shopCanvas) {
+          const w = 64 * scale;
+          const h = 52 * scale;
+          ctx.drawImage(this.shopCanvas, screen.x - w / 2, screen.y - h + 10 * scale, w, h);
+        }
         break;
       }
 
       case 'quest': {
-        // Celestial Quest Board Structure
-        ctx.fillStyle = '#3d251e';
-        ctx.fillRect(screen.x - 4 * scale, screen.y - 30 * scale, 8 * scale, 34 * scale); // post
-        ctx.fillStyle = '#6b4423';
-        ctx.fillRect(screen.x - 22 * scale, screen.y - 28 * scale, 44 * scale, 26 * scale); // board
-
-        // Parchment notice notices
-        ctx.fillStyle = '#fef3c7';
-        ctx.fillRect(screen.x - 16 * scale, screen.y - 22 * scale, 12 * scale, 14 * scale);
-        ctx.fillRect(screen.x + 4 * scale, screen.y - 22 * scale, 12 * scale, 14 * scale);
-
-        // Glowing Star pin
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.arc(screen.x, screen.y - 24 * scale, 3 * scale, 0, Math.PI * 2);
-        ctx.fill();
+        if (this.questCanvas) {
+          const w = 48 * scale;
+          const h = 44 * scale;
+          ctx.drawImage(this.questCanvas, screen.x - w / 2, screen.y - h + 8 * scale, w, h);
+        }
         break;
       }
 
       case 'constellation': {
-        // Felis Major Altar
-        ctx.fillStyle = '#312e81';
-        ctx.beginPath();
-        ctx.ellipse(screen.x, screen.y, 28 * scale, 16 * scale, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#4338ca';
-        ctx.beginPath();
-        ctx.ellipse(screen.x, screen.y - 3 * scale, 24 * scale, 13 * scale, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Floating glowing constellation crystal
-        const floatY = Math.sin(time * 2.2) * 4 * scale;
-        ctx.fillStyle = '#a855f7';
-        ctx.beginPath();
-        ctx.moveTo(screen.x, screen.y - 26 * scale + floatY);
-        ctx.lineTo(screen.x + 8 * scale, screen.y - 16 * scale + floatY);
-        ctx.lineTo(screen.x, screen.y - 6 * scale + floatY);
-        ctx.lineTo(screen.x - 8 * scale, screen.y - 16 * scale + floatY);
-        ctx.closePath();
-        ctx.fill();
+        if (this.altarCanvas) {
+          const w = 64 * scale;
+          const h = 48 * scale;
+          ctx.drawImage(this.altarCanvas, screen.x - w / 2, screen.y - h + 10 * scale, w, h);
+        }
         break;
       }
 
       case 'almanac': {
-        // Pedestal with open glowing book
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(screen.x - 8 * scale, screen.y - 18 * scale, 16 * scale, 22 * scale);
-
-        // Book pages
-        ctx.fillStyle = '#fef08a';
-        ctx.fillRect(screen.x - 12 * scale, screen.y - 24 * scale, 24 * scale, 10 * scale);
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(screen.x - 1 * scale, screen.y - 24 * scale, 2 * scale, 10 * scale); // spine
+        if (this.almanacCanvas) {
+          const w = 32 * scale;
+          const h = 40 * scale;
+          ctx.drawImage(this.almanacCanvas, screen.x - w / 2, screen.y - h + 8 * scale, w, h);
+        }
         break;
       }
 
       case 'portal': {
-        // Dual Obsidian Pillars with Portal Vortex
-        ctx.fillStyle = '#1e1b4b';
-        ctx.fillRect(screen.x - 22 * scale, screen.y - 32 * scale, 10 * scale, 36 * scale);
-        ctx.fillRect(screen.x + 12 * scale, screen.y - 32 * scale, 10 * scale, 36 * scale);
-
-        // Swirling Portal Core
-        const grad = ctx.createRadialGradient(screen.x, screen.y - 16 * scale, 2 * scale, screen.x, screen.y - 16 * scale, 18 * scale);
-        grad.addColorStop(0, '#f472b6');
-        grad.addColorStop(0.5, '#8b5cf6');
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.ellipse(screen.x, screen.y - 16 * scale, 16 * scale, 22 * scale, time * 0.5, 0, Math.PI * 2);
-        ctx.fill();
+        if (this.portalCanvas) {
+          const w = 56 * scale;
+          const h = 64 * scale;
+          ctx.drawImage(this.portalCanvas, screen.x - w / 2, screen.y - h + 10 * scale, w, h);
+        }
         break;
       }
     }
 
-    // 2. Interactive Proximity Indicator Prompt [E]
+    // 2. Interactive Proximity Indicator Prompt [E] (Stepped Pixel Styling)
     if (isHovered) {
       const bobY = Math.sin(time * 4) * 3 * scale;
-      const pillY = screen.y - 36 * scale + bobY;
-
-      ctx.fillStyle = 'rgba(15, 12, 35, 0.9)';
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 1.5 * scale;
+      const pillY = screen.y - 48 * scale + bobY;
 
       const text = `[E] ${station.name}`;
-      ctx.font = `bold ${10 * scale}px sans-serif`;
+      ctx.font = `bold ${Math.max(10, Math.floor(10 * scale))}px 'Pixelify Sans', monospace`;
       const textMetrics = ctx.measureText(text);
       const pillW = textMetrics.width + 16 * scale;
       const pillH = 18 * scale;
 
-      ctx.beginPath();
-      ctx.roundRect(screen.x - pillW / 2, pillY - pillH / 2, pillW, pillH, 8 * scale);
-      ctx.fill();
-      ctx.stroke();
+      // Stepped Pixel Border Box
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(screen.x - pillW / 2, pillY - pillH / 2, pillW, pillH);
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(screen.x - pillW / 2 - 2 * scale, pillY - pillH / 2 + 2 * scale, 2 * scale, pillH - 4 * scale);
+      ctx.fillRect(screen.x + pillW / 2, pillY - pillH / 2 + 2 * scale, 2 * scale, pillH - 4 * scale);
+      ctx.fillRect(screen.x - pillW / 2 + 2 * scale, pillY - pillH / 2 - 2 * scale, pillW - 4 * scale, 2 * scale);
+      ctx.fillRect(screen.x - pillW / 2 + 2 * scale, pillY + pillH / 2, pillW - 4 * scale, 2 * scale);
+
+      ctx.fillStyle = '#fef08a';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, screen.x, pillY);

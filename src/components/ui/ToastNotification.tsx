@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { PixelStardustIcon } from './PixelIcons';
 
 interface ToastProps {
   title: string;
@@ -9,10 +9,10 @@ interface ToastProps {
 export const ToastNotification: React.FC<ToastProps> = ({ title, message }) => {
   return (
     <div className="cosmic-panel toast-banner">
-      <Sparkles className="text-yellow-400" size={24} style={{ color: '#fbbf24' }} />
+      <PixelStardustIcon size={24} />
       <div>
-        <div style={{ color: '#fbbf24', fontSize: '14px', textTransform: 'uppercase' }}>{title}</div>
-        <div style={{ color: '#f8fafc', fontSize: '15px' }}>{message}</div>
+        <div style={{ color: '#fbbf24', fontSize: '11px', fontFamily: 'var(--font-heading)' }}>{title}</div>
+        <div style={{ color: '#f8fafc', fontSize: '13px' }}>{message}</div>
       </div>
     </div>
   );

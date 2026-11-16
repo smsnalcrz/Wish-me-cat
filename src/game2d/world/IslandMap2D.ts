@@ -1,7 +1,8 @@
 /**
  * IslandMap2D.ts
- * 2D Island Map, Environmental Layers, and Collision Boundaries for Wish Me Cat.
- * Manages the floating celestial island, space background, stone paths, trees, and depth sorting.
+ * Handcrafted 2D Pixel-Art Celestial Island Map for Wish Me Cat.
+ * Features stepped crag cliff walls, multi-toned cosmic turf with pixel grass tufts and wildflowers,
+ * individual cobblestone flagstone pathways, handcrafted sakura/pine trees, crystals, and lanterns.
  */
 
 import { Camera2D } from '../core/Camera2D';
@@ -9,19 +10,25 @@ import { StarpondWater2D } from './StarpondWater2D';
 import { StationManager2D, InteractiveStation2D } from './Station2D';
 import { PixelCat } from '../entities/PixelCat';
 import { REGIONS } from '../../data/regions';
+import {
+  generateSakuraTreeSprite,
+  generatePineTreeSprite,
+  generateCrystalClusterSprite,
+  generateStoneLanternSprite
+} from '../rendering/PixelSprites';
 
 export interface TreeProp {
   x: number;
   y: number;
   radius: number;
-  type: 'sakura' | 'crystal' | 'lamp';
+  type: 'sakura' | 'pine' | 'crystal' | 'lamp';
 }
 
 export class IslandMap2D {
   public width: number = 720;
   public height: number = 620;
-  public islandRadiusX: number = 310;
-  public islandRadiusY: number = 260;
+  public islandRadiusX: number = 300;
+  public islandRadiusY: number = 250;
 
   public water: StarpondWater2D;
   public stationManager: StationManager2D;
@@ -31,38 +38,55 @@ export class IslandMap2D {
   private spaceStars: { x: number; y: number; size: number; speed: number; alpha: number }[] = [];
   private fallingPetals: { x: number; y: number; vx: number; vy: number; rot: number; color: string }[] = [];
 
+  // Ground Grass Tufts & Wildflowers
+  private grassTufts: { x: number; y: number; color: string; width: number; height: number }[] = [];
+  private cobblestones: { x: number; y: number; w: number; h: number; color: string }[] = [];
+
+  // Cached Pixel Tree/Prop Sprites
+  private sakuraCanvas: HTMLCanvasElement | null = null;
+  private pineCanvas: HTMLCanvasElement | null = null;
+  private crystalCanvas: HTMLCanvasElement | null = null;
+  private lampCanvas: HTMLCanvasElement | null = null;
+
   // Current Regional Theme
   public currentRegionId: string = 'region_moonpool';
 
   constructor() {
     this.water = new StarpondWater2D(0, 0);
     this.stationManager = new StationManager2D();
+    this.initSprites();
 
-    // Populate decorative trees, crystal clusters, and lanterns
+    // Environment Props around the island
     this.trees = [
       // Sakura Trees
-      { x: -130, y: -160, radius: 24, type: 'sakura' },
-      { x: 130, y: -160, radius: 24, type: 'sakura' },
-      { x: -160, y: 50, radius: 24, type: 'sakura' },
-      { x: 170, y: 50, radius: 24, type: 'sakura' },
-      { x: -60, y: 190, radius: 20, type: 'sakura' },
-      { x: 60, y: 190, radius: 20, type: 'sakura' },
+      { x: -140, y: -150, radius: 24, type: 'sakura' },
+      { x: 140, y: -150, radius: 24, type: 'sakura' },
+      { x: -170, y: 50, radius: 24, type: 'sakura' },
+      { x: 180, y: 50, radius: 24, type: 'sakura' },
+      { x: -70, y: 195, radius: 20, type: 'sakura' },
+      { x: 70, y: 195, radius: 20, type: 'sakura' },
+
+      // Celestial Pines
+      { x: -240, y: -80, radius: 18, type: 'pine' },
+      { x: 240, y: -80, radius: 18, type: 'pine' },
+      { x: -80, y: -220, radius: 18, type: 'pine' },
+      { x: 80, y: -220, radius: 18, type: 'pine' },
 
       // Glowing Crystal Clusters
-      { x: -220, y: -10, radius: 14, type: 'crystal' },
-      { x: 220, y: -10, radius: 14, type: 'crystal' },
-      { x: -100, y: 150, radius: 14, type: 'crystal' },
-      { x: 100, y: 150, radius: 14, type: 'crystal' },
+      { x: -225, y: 10, radius: 14, type: 'crystal' },
+      { x: 225, y: 10, radius: 14, type: 'crystal' },
+      { x: -110, y: 145, radius: 14, type: 'crystal' },
+      { x: 110, y: 145, radius: 14, type: 'crystal' },
 
-      // Starlight Lanterns along paths
-      { x: -50, y: 100, radius: 8, type: 'lamp' },
-      { x: 50, y: 100, radius: 8, type: 'lamp' },
-      { x: -110, y: -40, radius: 8, type: 'lamp' },
-      { x: 110, y: -40, radius: 8, type: 'lamp' },
-      { x: 0, y: -180, radius: 8, type: 'lamp' }
+      // Starlight Kasuga Lanterns
+      { x: -45, y: 95, radius: 8, type: 'lamp' },
+      { x: 45, y: 95, radius: 8, type: 'lamp' },
+      { x: -105, y: -35, radius: 8, type: 'lamp' },
+      { x: 105, y: -35, radius: 8, type: 'lamp' },
+      { x: 0, y: -175, radius: 8, type: 'lamp' }
     ];
 
-    // Background cosmic space stars (distant parallax)
+    // Distant Parallax Stars
     for (let i = 0; i < 90; i++) {
       this.spaceStars.push({
         x: (Math.random() - 0.5) * 1600,
@@ -84,6 +108,72 @@ export class IslandMap2D {
         color: Math.random() > 0.4 ? '#f472b6' : '#e879f9'
       });
     }
+
+    // Generate Ground Grass Tufts & Star Flowers on playable turf
+    for (let i = 0; i < 80; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = 0.55 + Math.random() * 0.38;
+      const x = Math.cos(angle) * this.islandRadiusX * r;
+      const y = Math.sin(angle) * this.islandRadiusY * r;
+
+      const tuftColors = ['#38bdf8', '#c084fc', '#fde047', '#4ade80', '#818cf8'];
+      this.grassTufts.push({
+        x,
+        y,
+        color: tuftColors[i % tuftColors.length],
+        width: 3 + (i % 3) * 2,
+        height: 2 + (i % 2) * 2
+      });
+    }
+
+    // Generate Handcrafted Cobblestones along pathways
+    this.generatePathCobblestones();
+  }
+
+  private initSprites(): void {
+    this.sakuraCanvas = generateSakuraTreeSprite();
+    this.pineCanvas = generatePineTreeSprite();
+    this.crystalCanvas = generateCrystalClusterSprite();
+    this.lampCanvas = generateStoneLanternSprite();
+  }
+
+  private generatePathCobblestones(): void {
+    // Generate stepping stones around the pond ring
+    const ringCount = 64;
+    for (let i = 0; i < ringCount; i++) {
+      const angle = (i / ringCount) * Math.PI * 2;
+      const dist = 1.14 + (Math.sin(i * 4) * 0.03);
+      const x = Math.cos(angle) * this.water.radiusX * dist;
+      const y = Math.sin(angle) * this.water.radiusY * dist;
+      const stoneColors = ['#3b3658', '#4b456e', '#595282', '#322d4d'];
+      this.cobblestones.push({
+        x,
+        y,
+        w: 6 + (i % 4) * 2,
+        h: 5 + ((i + 1) % 3) * 2,
+        color: stoneColors[i % stoneColors.length]
+      });
+    }
+
+    // Stepping stones branching to stations
+    this.stationManager.stations.forEach(st => {
+      const steps = 10;
+      for (let s = 1; s <= steps; s++) {
+        const t = s / steps;
+        const x = st.x * t;
+        const y = st.y * t;
+        const dPond = Math.hypot(x / this.water.radiusX, y / this.water.radiusY);
+        if (dPond > 1.1) {
+          this.cobblestones.push({
+            x: x + (Math.sin(s * 2) * 4),
+            y: y + (Math.cos(s * 2) * 4),
+            w: 5 + (s % 3) * 2,
+            h: 4 + (s % 2) * 2,
+            color: s % 2 === 0 ? '#4b456e' : '#3b3658'
+          });
+        }
+      }
+    });
   }
 
   public setRegion(regionId: string): void {
@@ -162,12 +252,10 @@ export class IslandMap2D {
   // Render Background and Base Terrain (Layers 0, 1, 2)
   public renderBase(ctx: CanvasRenderingContext2D, camera: Camera2D, time: number): void {
     const reg = REGIONS.find(r => r.id === this.currentRegionId) || REGIONS[0];
+    const scale = camera.zoom;
 
-    // Layer 0: Cosmic Space Gradient Backdrop
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, camera.viewportHeight);
-    bgGrad.addColorStop(0, reg.skyColor || '#070514');
-    bgGrad.addColorStop(1, '#0c0a24');
-    ctx.fillStyle = bgGrad;
+    // Layer 0: Deep Cosmic Space Backdrop
+    ctx.fillStyle = reg.skyColor || '#070514';
     ctx.fillRect(0, 0, camera.viewportWidth, camera.viewportHeight);
 
     // Distant Parallax Stars
@@ -180,68 +268,76 @@ export class IslandMap2D {
     });
 
     const centerScreen = camera.worldToScreen(0, 0);
-    const rx = this.islandRadiusX * camera.zoom;
-    const ry = this.islandRadiusY * camera.zoom;
+    const rx = this.islandRadiusX * scale;
+    const ry = this.islandRadiusY * scale;
 
     // Layer 1: Floating Island Rock Cliff Base & Drop Shadow
-    ctx.fillStyle = 'rgba(5, 3, 12, 0.65)';
+    ctx.fillStyle = '#05030c';
     ctx.beginPath();
-    ctx.ellipse(centerScreen.x, centerScreen.y + 18 * camera.zoom, rx + 14 * camera.zoom, ry + 16 * camera.zoom, 0, 0, Math.PI * 2);
+    ctx.ellipse(centerScreen.x, centerScreen.y + 16 * scale, rx + 10 * scale, ry + 12 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Island Cliff Wall
-    ctx.fillStyle = '#211c3b';
+    // Stepped Island Cliff Wall (Dark crag rock with rim)
+    ctx.fillStyle = '#1c1733';
     ctx.beginPath();
-    ctx.ellipse(centerScreen.x, centerScreen.y + 10 * camera.zoom, rx + 2 * camera.zoom, ry + 8 * camera.zoom, 0, 0, Math.PI * 2);
+    ctx.ellipse(centerScreen.x, centerScreen.y + 10 * scale, rx + 2 * scale, ry + 6 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Island Top Surface Turf (Cozy Cosmic Grass)
-    const turfGrad = ctx.createRadialGradient(centerScreen.x, centerScreen.y, rx * 0.1, centerScreen.x, centerScreen.y, rx);
-    turfGrad.addColorStop(0, '#273377'); // brighter inner grass
-    turfGrad.addColorStop(0.75, '#1e255e');
-    turfGrad.addColorStop(1, '#151945'); // dark outer rim
+    ctx.fillStyle = '#29224d';
+    ctx.beginPath();
+    ctx.ellipse(centerScreen.x, centerScreen.y + 4 * scale, rx, ry + 2 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    ctx.fillStyle = turfGrad;
+    // Island Top Surface Turf (Rich Cosmic Grass Palette)
+    ctx.fillStyle = '#1a2254'; // Outer dark turf
     ctx.beginPath();
     ctx.ellipse(centerScreen.x, centerScreen.y, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Stone Pathways connecting spawn, piers, and stations
-    this.renderStonePaths(ctx, camera);
+    ctx.fillStyle = '#263174'; // Main lush cosmic grass
+    ctx.beginPath();
+    ctx.ellipse(centerScreen.x, centerScreen.y, rx * 0.88, ry * 0.88, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Layer 2: Celestial Starpond Water
+    ctx.fillStyle = '#2e3d8c'; // Inner warm highlight grass
+    ctx.beginPath();
+    ctx.ellipse(centerScreen.x, centerScreen.y, rx * 0.65, ry * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Handcrafted Stepping Cobblestone Paths
+    this.renderCobblestones(ctx, camera);
+
+    // Decorative Grass Tufts & Star Flowers
+    this.grassTufts.forEach(tuft => {
+      const p = camera.worldToScreen(tuft.x, tuft.y);
+      ctx.fillStyle = tuft.color;
+      ctx.fillRect(Math.floor(p.x), Math.floor(p.y), Math.floor(tuft.width * scale), Math.floor(tuft.height * scale));
+    });
+
+    // Layer 2: Handcrafted Celestial Starpond Water
     this.water.render(ctx, camera, time);
   }
 
-  // Render stone pathways on the grass
-  private renderStonePaths(ctx: CanvasRenderingContext2D, camera: Camera2D): void {
-    ctx.save();
-    ctx.fillStyle = '#4a436e';
+  // Render individual cobblestone pavers
+  private renderCobblestones(ctx: CanvasRenderingContext2D, camera: Camera2D): void {
     const scale = camera.zoom;
+    this.cobblestones.forEach(stone => {
+      const p = camera.worldToScreen(stone.x, stone.y);
+      const sw = stone.w * scale;
+      const sh = stone.h * scale;
 
-    // Center circular cobblestone ring around the pond
-    const ringRadiusX = (this.water.radiusX + 16) * scale;
-    const ringRadiusY = (this.water.radiusY + 16) * scale;
-    const c = camera.worldToScreen(0, 0);
+      // Shadow below stone
+      ctx.fillStyle = '#18152e';
+      ctx.fillRect(Math.floor(p.x - sw / 2 + 1 * scale), Math.floor(p.y - sh / 2 + 1 * scale), Math.floor(sw), Math.floor(sh));
 
-    ctx.strokeStyle = '#3e375d';
-    ctx.lineWidth = 14 * scale;
-    ctx.beginPath();
-    ctx.ellipse(c.x, c.y, ringRadiusX, ringRadiusY, 0, 0, Math.PI * 2);
-    ctx.stroke();
+      // Stone face
+      ctx.fillStyle = stone.color;
+      ctx.fillRect(Math.floor(p.x - sw / 2), Math.floor(p.y - sh / 2), Math.floor(sw), Math.floor(sh));
 
-    // Paths branching to stations
-    this.stationManager.stations.forEach(st => {
-      const pScreen = camera.worldToScreen(st.x, st.y);
-      ctx.strokeStyle = '#4a436e';
-      ctx.lineWidth = 10 * scale;
-      ctx.beginPath();
-      ctx.moveTo(c.x, c.y);
-      ctx.lineTo(pScreen.x, pScreen.y);
-      ctx.stroke();
+      // Top Highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillRect(Math.floor(p.x - sw / 2), Math.floor(p.y - sh / 2), Math.floor(sw - 1 * scale), Math.max(1, Math.floor(1 * scale)));
     });
-
-    ctx.restore();
   }
 
   // Render Props, Trees, Stations and Foreground Y-Sorted Entities
@@ -270,67 +366,29 @@ export class IslandMap2D {
       });
     });
 
-    // Trees & Props
+    // Trees & Props (Using Handcrafted Pixel Sprites!)
     this.trees.forEach(tree => {
       drawList.push({
         y: tree.y,
         draw: () => {
           const tScreen = camera.worldToScreen(tree.x, tree.y);
 
-          if (tree.type === 'sakura') {
-            // Shadow
-            ctx.fillStyle = 'rgba(10, 8, 25, 0.35)';
-            ctx.beginPath();
-            ctx.ellipse(tScreen.x, tScreen.y + 4 * scale, 14 * scale, 6 * scale, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Trunk
-            ctx.fillStyle = '#452b1f';
-            ctx.fillRect(tScreen.x - 3 * scale, tScreen.y - 18 * scale, 6 * scale, 20 * scale);
-
-            // Pink Sakura Foliage Canopy
-            const sway = Math.sin(time * 1.5 + tree.x) * 1.5 * scale;
-            ctx.fillStyle = '#c026d3';
-            ctx.beginPath();
-            ctx.arc(tScreen.x + sway, tScreen.y - 28 * scale, 22 * scale, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#f472b6';
-            ctx.beginPath();
-            ctx.arc(tScreen.x + sway - 3 * scale, tScreen.y - 30 * scale, 17 * scale, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#fbcfe8';
-            ctx.beginPath();
-            ctx.arc(tScreen.x + sway + 3 * scale, tScreen.y - 32 * scale, 10 * scale, 0, Math.PI * 2);
-            ctx.fill();
-          } else if (tree.type === 'crystal') {
-            // Glowing Crystal Formation
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.moveTo(tScreen.x, tScreen.y - 22 * scale);
-            ctx.lineTo(tScreen.x + 6 * scale, tScreen.y);
-            ctx.lineTo(tScreen.x - 6 * scale, tScreen.y);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.fillStyle = '#7dd3fc';
-            ctx.beginPath();
-            ctx.moveTo(tScreen.x - 3 * scale, tScreen.y - 16 * scale);
-            ctx.lineTo(tScreen.x, tScreen.y);
-            ctx.lineTo(tScreen.x - 8 * scale, tScreen.y);
-            ctx.closePath();
-            ctx.fill();
-          } else if (tree.type === 'lamp') {
-            // Starlight Post Lamp
-            ctx.fillStyle = '#1e1b4b';
-            ctx.fillRect(tScreen.x - 1.5 * scale, tScreen.y - 16 * scale, 3 * scale, 18 * scale);
-
-            // Glowing Lantern Bulb
-            ctx.fillStyle = '#fbbf24';
-            ctx.beginPath();
-            ctx.arc(tScreen.x, tScreen.y - 18 * scale, 4 * scale, 0, Math.PI * 2);
-            ctx.fill();
+          if (tree.type === 'sakura' && this.sakuraCanvas) {
+            const w = 48 * scale;
+            const h = 64 * scale;
+            ctx.drawImage(this.sakuraCanvas, tScreen.x - w / 2, tScreen.y - h + 10 * scale, w, h);
+          } else if (tree.type === 'pine' && this.pineCanvas) {
+            const w = 32 * scale;
+            const h = 48 * scale;
+            ctx.drawImage(this.pineCanvas, tScreen.x - w / 2, tScreen.y - h + 8 * scale, w, h);
+          } else if (tree.type === 'crystal' && this.crystalCanvas) {
+            const w = 24 * scale;
+            const h = 32 * scale;
+            ctx.drawImage(this.crystalCanvas, tScreen.x - w / 2, tScreen.y - h + 6 * scale, w, h);
+          } else if (tree.type === 'lamp' && this.lampCanvas) {
+            const w = 16 * scale;
+            const h = 28 * scale;
+            ctx.drawImage(this.lampCanvas, tScreen.x - w / 2, tScreen.y - h + 6 * scale, w, h);
           }
         }
       });
@@ -347,9 +405,7 @@ export class IslandMap2D {
       ctx.translate(pScreen.x, pScreen.y);
       ctx.rotate(petal.rot);
       ctx.fillStyle = petal.color;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 3 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(Math.floor(-1.5 * scale), Math.floor(-1 * scale), Math.floor(3 * scale), Math.floor(2 * scale));
       ctx.restore();
     });
   }
