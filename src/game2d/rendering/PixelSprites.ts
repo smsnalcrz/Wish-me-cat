@@ -1260,41 +1260,101 @@ export function generateRealmGatewaySprite(): HTMLCanvasElement {
 }
 
 // Swimming Celestial Koi Sprite Sheet (4 Frames: 24x16 each)
+// Authored with Volumetric 3D Directional Shading (Dorsal Spine Highlight & Ventral Shadow)
 export function generateCelestialKoiSpriteSheet(): HTMLCanvasElement[] {
   const frames: HTMLCanvasElement[] = [];
 
   for (let f = 0; f < 4; f++) {
     const { canvas, ctx } = createPixelCanvas(24, 16);
+    // Explicit clean transparent background
+    ctx.clearRect(0, 0, 24, 16);
+
     const tailOffset = Math.sin((f / 4) * Math.PI * 2) * 2;
 
-    // Body (Golden / Orange with soft cream belly)
-    ctx.fillStyle = '#ea580c';
-    ctx.fillRect(6, 5, 11, 6);
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(7, 4, 9, 8);
+    // 1. Pectoral Fins (flowing translucent fins beneath body)
+    ctx.fillStyle = 'rgba(254, 215, 170, 0.75)';
+    ctx.fillRect(8, 2, 5, 2);
+    ctx.fillRect(8, 12, 5, 2);
 
-    // Cream belly & spots
-    ctx.fillStyle = '#ffedd5';
-    ctx.fillRect(9, 6, 5, 4);
+    // 2. Dorsal Spine Top Highlight (Directional 3D lighting from above)
     ctx.fillStyle = '#fed7aa';
-    ctx.fillRect(13, 7, 3, 2);
+    ctx.fillRect(7, 4, 8, 2);
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(9, 4, 4, 1);
 
-    // Glowing starlight eyes
+    // 3. Main Mid-Body (Vibrant Golden Celestial Orange)
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(6, 6, 11, 4);
+    ctx.fillStyle = '#ea580c';
+    ctx.fillRect(7, 5, 9, 6);
+
+    // 4. Ventral Lower Shadow (Rounded 3D cylinder form)
+    ctx.fillStyle = '#9a3412';
+    ctx.fillRect(6, 10, 10, 2);
+    ctx.fillStyle = '#7c2d12';
+    ctx.fillRect(7, 11, 8, 1);
+
+    // 5. Cream Belly & Starlight Markings
+    ctx.fillStyle = '#ffedd5';
+    ctx.fillRect(10, 7, 4, 3);
+    ctx.fillStyle = '#fef3c7';
+    ctx.fillRect(13, 8, 2, 2);
+
+    // 6. Glowing Starlight Eyes (Luminous White)
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(14, 4, 1, 1);
-    ctx.fillRect(14, 11, 1, 1);
+    ctx.fillRect(14, 5, 1, 1);
+    ctx.fillRect(14, 10, 1, 1);
+    ctx.fillStyle = '#38bdf8'; // Cyan iris twinkle
+    ctx.fillRect(13, 5, 1, 1);
+    ctx.fillRect(13, 10, 1, 1);
 
-    // Pectoral Fins (flowing translucent)
-    ctx.fillStyle = 'rgba(254, 215, 170, 0.85)';
-    ctx.fillRect(9, 2, 4, 2);
-    ctx.fillRect(9, 12, 4, 2);
-
-    // Tail Fin with wagging offset
+    // 7. Undulating Caudal Tail Fin
     const ty = Math.round(7 + tailOffset);
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(4, ty, 3, 2);
     ctx.fillStyle = '#fb923c';
-    ctx.fillRect(3, ty, 3, 2);
+    ctx.fillRect(2, ty - 1, 3, 4);
     ctx.fillStyle = '#fdba74';
-    ctx.fillRect(1, ty - 1, 2, 4);
+    ctx.fillRect(0, ty - 1, 2, 4);
+
+    frames.push(canvas);
+  }
+
+  return frames;
+}
+
+// Deep Abyssal Shadow Fish Sprite Sheet (4 Frames: 28x14 each)
+// Semi-submerged ancient celestial creature for deep water tiers
+export function generateDeepFishSpriteSheet(): HTMLCanvasElement[] {
+  const frames: HTMLCanvasElement[] = [];
+
+  for (let f = 0; f < 4; f++) {
+    const { canvas, ctx } = createPixelCanvas(28, 14);
+    ctx.clearRect(0, 0, 28, 14);
+
+    const tailWag = Math.sin((f / 4) * Math.PI * 2) * 2;
+
+    // 1. Deep Oceanic Silhouette Body
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(7, 4, 14, 6);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(8, 3, 11, 8);
+
+    // 2. Faint Starlight Dorsal Ridge
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(10, 3, 7, 1);
+
+    // 3. Bioluminescent Eye
+    ctx.fillStyle = '#67e8f9';
+    ctx.fillRect(17, 5, 1, 1);
+    ctx.fillRect(17, 8, 1, 1);
+
+    // 4. Undulating Fin
+    const ty = Math.round(6 + tailWag);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(4, ty, 3, 2);
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
+    ctx.fillRect(1, ty - 1, 3, 4);
 
     frames.push(canvas);
   }
@@ -1303,26 +1363,44 @@ export function generateCelestialKoiSpriteSheet(): HTMLCanvasElement[] {
 }
 
 // Lilypad with Lotus Flower Sprite (20x20)
+// Authored with multi-toned emerald disc, leaf veins, and blooming pink lotus petals
 export function generateLotusLilypadSprite(): HTMLCanvasElement {
   const { canvas, ctx } = createPixelCanvas(20, 20);
+  ctx.clearRect(0, 0, 20, 20);
 
-  // Green Lilypad Disc with Notch
-  ctx.fillStyle = '#065f46';
+  // 1. Deep Emerald Pad Base Rim
+  ctx.fillStyle = '#064e3b';
   ctx.fillRect(2, 4, 16, 12);
   ctx.fillRect(4, 2, 12, 16);
 
+  // 2. Lush Jade Body
   ctx.fillStyle = '#059669';
   ctx.fillRect(3, 5, 14, 10);
   ctx.fillRect(5, 3, 10, 14);
 
-  // V-Notch cut
-  ctx.clearRect(10, 10, 8, 4);
+  // 3. Leaf Vein Highlights
+  ctx.fillStyle = '#34d399';
+  ctx.fillRect(6, 4, 2, 6);
+  ctx.fillRect(12, 4, 2, 6);
+  ctx.fillRect(4, 8, 6, 2);
 
-  // Lotus Flower at center
+  // 4. V-Notch cut
+  ctx.clearRect(10, 10, 8, 5);
+
+  // 5. Layered Blooming Pink Lotus Flower (Reference Image benchmark)
+  // Outer deep rose petals
+  ctx.fillStyle = '#db2777';
+  ctx.fillRect(6, 6, 8, 8);
+
+  // Mid pink petals
   ctx.fillStyle = '#f472b6';
   ctx.fillRect(7, 7, 6, 6);
+
+  // Soft blossom highlights
   ctx.fillStyle = '#fbcfe8';
   ctx.fillRect(8, 8, 4, 4);
+
+  // Warm golden pollen heart
   ctx.fillStyle = '#fef08a';
   ctx.fillRect(9, 9, 2, 2);
 

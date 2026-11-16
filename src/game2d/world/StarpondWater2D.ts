@@ -1,20 +1,17 @@
 /**
  * StarpondWater2D.ts
- * Handcrafted 2D Pixel-Art Celestial Galaxy Pond with True 2.5D Sunken Depth for Wish Me Cat.
- * Features:
- * - 2.5D Sunken Basin with northern crag embankment cliff wall & cast drop shadow
- * - 4-Tier Depth Stratification (Shoreline Silt -> Aqua Shallows -> Twilight Sapphire -> Abyssal Void)
- * - Submerged river stones & moss pebbles scattered across the shallow floor
- * - Deep-water shadow fish silhouettes swimming with undulating tails in the abyss
- * - Swimming celestial koi pair with submerged floor shadow & water absorption tint
- * - Stepped animated pixel-art light caustics with sinusoidal optical refraction
- * - Floating lotus lilypads with projected floor shadows
- * - Rising bioluminescent celestial plankton motes & starlight glints
- * - Handcrafted perimeter shoreline rocks with wet waterline bases & dry highlighted tops
+ * Handcrafted 2D Pixel-Art Celestial Galaxy Pond for Wish Me Cat.
+ * Upgraded with Organic Layered Water Depth, Sky Clearing Reflections,
+ * Clustered Lilypads with Floor Shadows, Floating Petals, Warm Lantern Reflections,
+ * and Volumetric 3D Shaded Fish with Dynamic Cast Shadows across Multi-Depth Tiers.
  */
 
 import { Camera2D } from '../core/Camera2D';
-import { generateCelestialKoiSpriteSheet, generateLotusLilypadSprite } from '../rendering/PixelSprites';
+import {
+  generateCelestialKoiSpriteSheet,
+  generateLotusLilypadSprite,
+  generateDeepFishSpriteSheet
+} from '../rendering/PixelSprites';
 
 export interface WaterRipple {
   x: number;
@@ -29,36 +26,38 @@ export interface LilyPad {
   x: number;
   y: number;
   angle: number;
+  sizeScale: number;
 }
 
-export interface ShadowFish {
+export interface SwimmingFish {
+  type: 'koi' | 'deep';
+  depth: number; // 0.88 = surface, 0.58 = mid, 0.25 = deep
   angle: number;
+  speed: number;
   orbitRx: number;
   orbitRy: number;
-  speed: number;
-  length: number;
-  width: number;
-  depthTier: 'abyss' | 'mid';
+  orbitCenterX: number;
+  orbitCenterY: number;
+  baseWidth: number;
+  baseHeight: number;
   tailPhase: number;
 }
 
-export interface SubmergedPebble {
+export interface FloatingPetal {
   x: number;
   y: number;
-  w: number;
-  h: number;
   color: string;
-  highlight: string;
+  phase: number;
+  size: number;
+  driftVx: number;
+  driftVy: number;
 }
 
-export interface BioMote {
+export interface LanternReflection {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
-  alpha: number;
-  maxAlpha: number;
-  size: number;
+  rx: number;
+  ry: number;
 }
 
 export class StarpondWater2D {
@@ -70,30 +69,39 @@ export class StarpondWater2D {
 
   // Pixel Assets
   private koiFrames: HTMLCanvasElement[] = [];
+  private deepFishFrames: HTMLCanvasElement[] = [];
   private lilypadCanvas: HTMLCanvasElement | null = null;
 
   // Starlight Water Particles & Shimmers
   private glints: { x: number; y: number; size: number; speed: number; alpha: number; phase: number }[] = [];
   private ripples: WaterRipple[] = [];
   private lilypads: LilyPad[] = [];
+  private petals: FloatingPetal[] = [];
   private shorelineRocks: { angle: number; dist: number; width: number; height: number; color: string; highlight: string; wetColor: string }[] = [];
 
-  // Enhanced Depth Features
-  private submergedPebbles: SubmergedPebble[] = [];
-  private shadowFish: ShadowFish[] = [];
-  private biomotes: BioMote[] = [];
+  // Enhanced Multi-Depth Swimming Fish
+  private fishRoster: SwimmingFish[] = [];
+
+  // Pier Lantern Reflection Coordinates (relative to pond center)
+  private lanternReflections: LanternReflection[] = [
+    { x: 10, y: 110, rx: 24, ry: 16 },   // South Pier Lantern
+    { x: 10, y: -110, rx: 24, ry: 16 },  // North Pier Lantern
+    { x: 125, y: -8, rx: 16, ry: 24 },   // East Pier Lantern
+    { x: -125, y: -8, rx: 16, ry: 24 },  // West Pier Lantern
+  ];
 
   constructor(centerX: number = 0, centerY: number = 0) {
     this.centerX = centerX;
     this.centerY = centerY;
 
     this.koiFrames = generateCelestialKoiSpriteSheet();
+    this.deepFishFrames = generateDeepFishSpriteSheet();
     this.lilypadCanvas = generateLotusLilypadSprite();
 
-    // 1. Generate Starlight Glints
-    for (let i = 0; i < 45; i++) {
+    // 1. Generate Starlight Sparkles in Clearing
+    for (let i = 0; i < 40; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const r = Math.random() * 0.82;
+      const r = Math.random() * 0.70;
       this.glints.push({
         x: Math.cos(angle) * this.radiusX * r,
         y: Math.sin(angle) * this.radiusY * r,
@@ -104,91 +112,127 @@ export class StarpondWater2D {
       });
     }
 
-    // 2. Submerged River Pebbles on the Shallow Shelf
-    for (let i = 0; i < 36; i++) {
-      const angle = (i / 36) * Math.PI * 2 + (Math.sin(i * 2.3) * 0.1);
-      const dist = 0.80 + (Math.sin(i * 3.7) * 0.09);
-      const px = Math.cos(angle) * this.radiusX * dist;
-      const py = Math.sin(angle) * this.radiusY * dist;
-      const colors = [
-        { color: '#223354', highlight: '#3b5585' },
-        { color: '#1a2845', highlight: '#2e4570' },
-        { color: '#2a3b5c', highlight: '#46618e' },
-      ];
-      const c = colors[i % colors.length];
-      this.submergedPebbles.push({
-        x: px,
-        y: py,
-        w: 3 + (i % 3) * 2,
-        h: 2 + ((i + 1) % 2) * 2,
-        color: c.color,
-        highlight: c.highlight
-      });
-    }
-
-    // 3. Deep Shadow Fish Silhouettes in the Abyss & Mid Tiers
-    this.shadowFish = [
-      // 1 Large Ancient Leviathan in the deepest trench
+    // 2. Multi-Depth Swimming Fish Roster (Varying Depths, Volumetric Shading, Cast Shadows)
+    this.fishRoster = [
+      // Surface Vibrant Celestial Koi (z = 0.88, crisp, full size, near shadow)
       {
-        angle: 0,
-        orbitRx: this.radiusX * 0.28,
-        orbitRy: this.radiusY * 0.24,
-        speed: 0.16,
-        length: 32,
-        width: 12,
-        depthTier: 'abyss',
+        type: 'koi',
+        depth: 0.88,
+        angle: 0.4,
+        speed: 0.30,
+        orbitRx: this.radiusX * 0.48,
+        orbitRy: this.radiusY * 0.46,
+        orbitCenterX: -6,
+        orbitCenterY: 10,
+        baseWidth: 26,
+        baseHeight: 16,
         tailPhase: 0
       },
-      // 2 Agile Astral Minnow shadows cruising the mid shelf
+      // Mid-Depth Starlight Koi (z = 0.58, slightly softened, medium shadow)
       {
-        angle: Math.PI * 0.7,
-        orbitRx: this.radiusX * 0.52,
-        orbitRy: this.radiusY * 0.48,
-        speed: 0.28,
-        length: 18,
-        width: 7,
-        depthTier: 'mid',
-        tailPhase: 1.5
+        type: 'koi',
+        depth: 0.58,
+        angle: 3.4,
+        speed: 0.26,
+        orbitRx: this.radiusX * 0.42,
+        orbitRy: this.radiusY * 0.40,
+        orbitCenterX: 8,
+        orbitCenterY: -4,
+        baseWidth: 24,
+        baseHeight: 15,
+        tailPhase: 1.8
       },
+      // Deep Abyssal Stargazer (z = 0.22, deep shadow silhouette, far shadow, slow undulating swim)
       {
-        angle: Math.PI * 1.5,
-        orbitRx: this.radiusX * 0.58,
-        orbitRy: this.radiusY * 0.50,
-        speed: 0.24,
-        length: 16,
-        width: 6,
-        depthTier: 'mid',
-        tailPhase: 3.2
+        type: 'deep',
+        depth: 0.22,
+        angle: 1.8,
+        speed: 0.16,
+        orbitRx: this.radiusX * 0.32,
+        orbitRy: this.radiusY * 0.28,
+        orbitCenterX: 0,
+        orbitCenterY: -10,
+        baseWidth: 32,
+        baseHeight: 14,
+        tailPhase: 3.5
+      },
+      // Agile Mid Minnow (z = 0.45, darting orbit)
+      {
+        type: 'deep',
+        depth: 0.45,
+        angle: 5.1,
+        speed: 0.34,
+        orbitRx: this.radiusX * 0.62,
+        orbitRy: this.radiusY * 0.52,
+        orbitCenterX: -12,
+        orbitCenterY: -6,
+        baseWidth: 20,
+        baseHeight: 10,
+        tailPhase: 0.8
       }
     ];
 
-    // 4. Rising Bioluminescent Stardust Plankton Motes
-    for (let i = 0; i < 24; i++) {
+    // 3. Floating Sakura / Lotus Flower Petals on Water Surface (Reference Benchmark)
+    const petalColors = ['#f472b6', '#fbcfe8', '#fda4af', '#e879f9', '#f9a8d4'];
+    for (let i = 0; i < 28; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const r = Math.random() * 0.65;
-      this.biomotes.push({
+      const r = 0.15 + Math.random() * 0.70;
+      this.petals.push({
         x: Math.cos(angle) * this.radiusX * r,
         y: Math.sin(angle) * this.radiusY * r,
-        vx: (Math.random() - 0.5) * 4,
-        vy: -(4 + Math.random() * 8),
-        alpha: Math.random() * 0.8,
-        maxAlpha: 0.4 + Math.random() * 0.5,
-        size: Math.random() > 0.7 ? 2 : 1
+        color: petalColors[i % petalColors.length],
+        phase: Math.random() * Math.PI * 2,
+        size: Math.random() > 0.5 ? 2.5 : 2.0,
+        driftVx: (Math.random() - 0.5) * 2,
+        driftVy: (Math.random() - 0.5) * 2
       });
     }
 
-    // 5. Hand-placed floating lotus lilypads around the pond
-    const padAngles = [0.45, 1.25, 2.15, 2.9, 3.8, 4.65, 5.5];
-    padAngles.forEach((angle, i) => {
-      const dist = 0.52 + (i % 3) * 0.14;
-      this.lilypads.push({
-        x: Math.cos(angle) * this.radiusX * dist,
-        y: Math.sin(angle) * this.radiusY * dist,
-        angle: (i * 0.9)
+    // 4. Clustered Lily Pads with Lotus Blossoms (Grouped like the reference image!)
+    const clusters = [
+      // Top-Left Cluster (Near bank waterfall/embankment)
+      [
+        { ox: -75, oy: -55, s: 1.05 },
+        { ox: -60, oy: -48, s: 0.90 },
+        { ox: -88, oy: -42, s: 1.00 },
+        { ox: -70, oy: -35, s: 0.85 },
+        { ox: -52, oy: -60, s: 0.75 }
+      ],
+      // Bottom-Left Cluster
+      [
+        { ox: -85, oy: 38, s: 1.00 },
+        { ox: -70, oy: 48, s: 0.90 },
+        { ox: -92, oy: 58, s: 0.80 },
+        { ox: -55, oy: 42, s: 0.85 }
+      ],
+      // Right Bank Cluster
+      [
+        { ox: 68, oy: 18, s: 1.05 },
+        { ox: 82, oy: 28, s: 0.95 },
+        { ox: 62, oy: 36, s: 0.85 },
+        { ox: 88, oy: 45, s: 0.75 },
+        { ox: 72, oy: -2, s: 0.90 }
+      ],
+      // Center-Right Accent Cluster
+      [
+        { ox: 38, oy: 55, s: 0.95 },
+        { ox: 52, oy: 65, s: 0.80 },
+        { ox: 30, oy: 70, s: 0.70 }
+      ]
+    ];
+
+    clusters.forEach((group, cIdx) => {
+      group.forEach((pad, pIdx) => {
+        this.lilypads.push({
+          x: pad.ox,
+          y: pad.oy,
+          angle: (cIdx * 1.5 + pIdx * 0.8),
+          sizeScale: pad.s
+        });
       });
     });
 
-    // 6. 48 Interlocking Handcrafted Shoreline Stones with Wet Waterline Bases
+    // 5. 48 Interlocking Handcrafted Shoreline Stones with Wet Waterline Bases
     const rockCount = 48;
     for (let i = 0; i < rockCount; i++) {
       const angle = (i / rockCount) * Math.PI * 2;
@@ -241,35 +285,28 @@ export class StarpondWater2D {
       }
     }
 
-    // 2. Update Rising Bioluminescent Plankton Motes
-    this.biomotes.forEach(mote => {
-      mote.y += mote.vy * delta;
-      mote.x += mote.vx * delta;
-      mote.alpha += delta * 0.3;
-      if (mote.alpha > mote.maxAlpha) {
-        mote.alpha = mote.maxAlpha;
-      }
-
-      // Reset when floating too high or drifting out of pond
-      const dx = mote.x / (this.radiusX * 0.65);
-      const dy = mote.y / (this.radiusY * 0.65);
-      if (mote.y < -this.radiusY * 0.6 || dx * dx + dy * dy > 1.0) {
-        const angle = Math.random() * Math.PI * 2;
-        const r = Math.random() * 0.45;
-        mote.x = Math.cos(angle) * this.radiusX * r;
-        mote.y = Math.sin(angle) * this.radiusY * r + 15;
-        mote.alpha = 0.05;
-      }
+    // 2. Update Swimming Fish
+    this.fishRoster.forEach(fish => {
+      fish.angle += fish.speed * delta;
+      fish.tailPhase += delta * 6.5;
     });
 
-    // 3. Update Deep Shadow Fish Patrols
-    this.shadowFish.forEach(fish => {
-      fish.angle += fish.speed * delta;
-      fish.tailPhase += delta * 6;
+    // 3. Update Drifting Floating Petals
+    this.petals.forEach(petal => {
+      petal.x += petal.driftVx * delta;
+      petal.y += petal.driftVy * delta;
+
+      // Keep inside pond boundaries
+      const dx = petal.x / (this.radiusX * 0.85);
+      const dy = petal.y / (this.radiusY * 0.85);
+      if (dx * dx + dy * dy > 1.0) {
+        petal.driftVx = -petal.driftVx;
+        petal.driftVy = -petal.driftVy;
+      }
     });
 
     // 4. Occasional Natural Water Drops / Splashes
-    if (Math.random() < 0.025) {
+    if (Math.random() < 0.02) {
       const angle = Math.random() * Math.PI * 2;
       const r = 0.2 + Math.random() * 0.6;
       this.triggerRipple(
@@ -290,20 +327,20 @@ export class StarpondWater2D {
     ctx.save();
 
     // =========================================================================
-    // STEP 1: SUNKEN BASIN NORTHERN CLIFF DROP-OFF (Z-Depth Perspective)
+    // STEP 1: SUNKEN BASIN NORTHERN EMBANKMENT DROP-OFF (Z-Depth Perspective)
     // =========================================================================
-    // Outer drop shadow pit
-    ctx.fillStyle = '#060410';
+    // Outer drop shadow pit behind northern rim
+    ctx.fillStyle = '#05030c';
     ctx.beginPath();
     ctx.ellipse(centerScreen.x, centerScreen.y + 6 * scale, rx + 10 * scale, ry + drop + 8 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Stepped inner rock cliff along northern half of basin (angles 180° to 360°)
+    // Stepped inner rock cliff wall along northern rim (angles 180° to 360°)
     for (let step = Math.floor(drop); step > 0; step -= Math.max(1, Math.floor(2 * scale))) {
       const t = step / drop;
-      const r = Math.floor(24 + (1 - t) * 22);
-      const g = Math.floor(20 + (1 - t) * 18);
-      const b = Math.floor(48 + (1 - t) * 38);
+      const r = Math.floor(22 + (1 - t) * 22);
+      const g = Math.floor(18 + (1 - t) * 18);
+      const b = Math.floor(46 + (1 - t) * 38);
       ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
       ctx.lineWidth = Math.max(1, Math.floor(2.5 * scale));
       ctx.beginPath();
@@ -312,209 +349,257 @@ export class StarpondWater2D {
     }
 
     // =========================================================================
-    // STEP 2: MAIN WATER SURFACE BASE (Shifted slightly down into basin)
+    // STEP 2: MAIN WATER SURFACE (Shifted down into sunken basin)
     // =========================================================================
     const waterScreenY = centerScreen.y + drop * 0.45;
 
-    // Deep water bed base (Twilight Navy Teal)
-    ctx.fillStyle = '#0a1324';
+    // Deep water bed base (Deepest Midnight Teal & Navy)
+    ctx.fillStyle = '#06111f';
     ctx.beginPath();
     ctx.ellipse(centerScreen.x, waterScreenY, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Clip to water boundary for all liquid effects
+    // Clip to water boundary for all liquid & submerged effects
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(centerScreen.x, waterScreenY, rx - 1, ry - 1, 0, 0, Math.PI * 2);
     ctx.clip();
 
     // =========================================================================
-    // STEP 3: 4-TIER DEPTH STRATIFICATION
+    // STEP 3: ORGANIC LAYERED WATER DEPTH GRADIENT (No rigid concentric ovals)
     // =========================================================================
-    // Tier 1: Shallow Sand & Aqua Silt Shelf (Along shoreline)
-    ctx.fillStyle = '#132342';
+    // Multi-stop smooth radial gradient blending from dark shaded edges to softer indigo/teal
+    const waterGrad = ctx.createRadialGradient(
+      centerScreen.x - 8 * scale,
+      waterScreenY + 6 * scale,
+      rx * 0.15,
+      centerScreen.x,
+      waterScreenY,
+      rx
+    );
+    waterGrad.addColorStop(0.00, '#102742'); // Inner illuminated teal-indigo
+    waterGrad.addColorStop(0.35, '#0c2036'); // Soft indigo mid-zone
+    waterGrad.addColorStop(0.65, '#081728'); // Deep shaded water
+    waterGrad.addColorStop(0.85, '#06111f'); // Midnight navy margin
+    waterGrad.addColorStop(1.00, '#040b15'); // Abyssal perimeter
+
+    ctx.fillStyle = waterGrad;
     ctx.beginPath();
-    ctx.ellipse(centerScreen.x, waterScreenY + 2 * scale, rx * 0.93, ry * 0.93, 0, 0, Math.PI * 2);
+    ctx.ellipse(centerScreen.x, waterScreenY, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Submerged River Stones & Moss Pebbles on the shallow bed
-    this.submergedPebbles.forEach(peb => {
-      const ps = camera.worldToScreen(this.centerX + peb.x, this.centerY + peb.y + drop * 0.45 / scale);
-      const pw = peb.w * scale;
-      const ph = peb.h * scale;
+    // Organic Shaded Northern Bank (Deep shadow under cliff)
+    ctx.fillStyle = 'rgba(4, 8, 18, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(centerScreen.x, waterScreenY - ry * 0.40, rx * 0.88, ry * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-      ctx.fillStyle = peb.color;
-      ctx.fillRect(Math.floor(ps.x - pw / 2), Math.floor(ps.y - ph / 2), Math.floor(pw), Math.floor(ph));
-      ctx.fillStyle = peb.highlight;
-      ctx.fillRect(Math.floor(ps.x - pw / 2 + 1 * scale), Math.floor(ps.y - ph / 2 + 1 * scale), Math.floor(pw - 2 * scale), Math.max(1, Math.floor(ph * 0.4)));
+    // =========================================================================
+    // STEP 4: ORGANIC SHIMMERING SKY CLEARING REFLECTION (Reference Benchmark)
+    // =========================================================================
+    // In the pond clearing, render bright sky/starlight reflections with organic wave edges
+    const skyOx = -8 * scale;
+    const skyOy = 12 * scale;
+    const skyRx = rx * 0.46;
+    const skyRy = ry * 0.42;
+
+    // Outer sky reflection halo (Deep cerulean)
+    const wavePulse = Math.sin(time * 0.8) * 0.04;
+    ctx.fillStyle = 'rgba(29, 78, 216, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(
+      centerScreen.x + skyOx,
+      waterScreenY + skyOy,
+      skyRx * (1.18 + wavePulse),
+      skyRy * (1.18 + wavePulse),
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Mid sky blue clearing reflection
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.55)';
+    ctx.beginPath();
+    ctx.ellipse(
+      centerScreen.x + skyOx,
+      waterScreenY + skyOy,
+      skyRx * (1.00 + wavePulse),
+      skyRy * (0.95 + wavePulse),
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Inner luminous sky reflection core (Bright Sky Cyan)
+    ctx.fillStyle = 'rgba(125, 211, 252, 0.65)';
+    ctx.beginPath();
+    ctx.ellipse(
+      centerScreen.x + skyOx,
+      waterScreenY + skyOy,
+      skyRx * (0.72 + wavePulse),
+      skyRy * (0.68 + wavePulse),
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Dithered Specular Light Crests in Reflection (Sparkling white & cyan glints)
+    this.glints.forEach(st => {
+      const alpha = 0.35 + Math.sin(time * st.speed * 2 + st.phase) * 0.55;
+      const gPos = camera.worldToScreen(this.centerX + st.x + skyOx / scale, this.centerY + st.y + (drop * 0.45 + skyOy) / scale);
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.fillRect(Math.floor(gPos.x), Math.floor(gPos.y), Math.floor(st.size * scale), Math.floor(st.size * scale));
     });
 
-    // Tier 2: Mid-Depth Cosmic Shelf (Twilight Sapphire, offset northward)
-    ctx.fillStyle = '#181e52';
-    ctx.beginPath();
-    ctx.ellipse(centerScreen.x, waterScreenY - 5 * scale, rx * 0.74, ry * 0.72, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // =========================================================================
+    // STEP 5: WARM LOCALIZED PIER LANTERN REFLECTIONS
+    // =========================================================================
+    this.lanternReflections.forEach((lr, idx) => {
+      const lPos = camera.worldToScreen(this.centerX + lr.x, this.centerY + lr.y + (drop * 0.45) / scale);
+      const lPulse = Math.sin(time * 1.5 + idx * 1.2) * (2 * scale);
+      const lrx = lr.rx * scale + lPulse;
+      const lry = lr.ry * scale + lPulse * 0.6;
 
-    // Tier 3: Abyssal Heart Void Trench (Deep Midnight Violet)
-    ctx.fillStyle = '#080518';
-    ctx.beginPath();
-    ctx.ellipse(centerScreen.x, waterScreenY - 10 * scale, rx * 0.50, ry * 0.44, 0, 0, Math.PI * 2);
-    ctx.fill();
+      // Outer warm golden glow
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.22)';
+      ctx.beginPath();
+      ctx.ellipse(lPos.x, lPos.y, lrx, lry, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Core black starlit trench
-    ctx.fillStyle = '#04020c';
-    ctx.beginPath();
-    ctx.ellipse(centerScreen.x, waterScreenY - 12 * scale, rx * 0.34, ry * 0.30, 0, 0, Math.PI * 2);
-    ctx.fill();
+      // Core amber reflection
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.40)';
+      ctx.beginPath();
+      ctx.ellipse(lPos.x, lPos.y, lrx * 0.55, lry * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Animated Celestial Stardust Nebula Bands in the Deep Trench
-    const swirlAlpha = 0.16 + Math.sin(time * 0.8) * 0.05;
-    ctx.fillStyle = `rgba(168, 85, 247, ${swirlAlpha})`;
-    ctx.beginPath();
-    ctx.ellipse(
-      centerScreen.x + Math.sin(time * 0.5) * 8 * scale,
-      waterScreenY - 10 * scale,
-      rx * 0.42,
-      ry * 0.28,
-      time * 0.12,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    ctx.fillStyle = `rgba(56, 189, 248, ${swirlAlpha * 0.85})`;
-    ctx.beginPath();
-    ctx.ellipse(
-      centerScreen.x,
-      waterScreenY - 8 * scale + Math.cos(time * 0.6) * 6 * scale,
-      rx * 0.32,
-      ry * 0.36,
-      -time * 0.14,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
+      // Specular bright center
+      ctx.fillStyle = 'rgba(255, 255, 245, 0.65)';
+      ctx.fillRect(Math.floor(lPos.x - 1 * scale), Math.floor(lPos.y - 1 * scale), Math.floor(2 * scale), Math.floor(2 * scale));
+    });
 
     // =========================================================================
-    // STEP 4: DEEP SHADOW FISH SILHOUETTES IN THE ABYSS
+    // STEP 6: VOLUMETRIC 3D SHADED FISH WITH DYNAMIC CAST SHADOWS (Multi-Depth)
     // =========================================================================
-    this.shadowFish.forEach(fish => {
-      const fx = this.centerX + Math.cos(fish.angle) * fish.orbitRx;
-      const fy = this.centerY + Math.sin(fish.angle) * fish.orbitRy;
-      const fs = camera.worldToScreen(fx, fy + (drop * 0.45) / scale);
+    // Sort fish so deepest fish render first, surface fish render on top
+    const sortedFish = [...this.fishRoster].sort((a, b) => a.depth - b.depth);
+
+    sortedFish.forEach(fish => {
+      const fx = this.centerX + fish.orbitCenterX + Math.cos(fish.angle) * fish.orbitRx;
+      const fy = this.centerY + fish.orbitCenterY + Math.sin(fish.angle) * fish.orbitRy;
+      const fScreen = camera.worldToScreen(fx, fy + (drop * 0.45) / scale);
 
       const heading = fish.angle + Math.PI / 2;
-      const tailOsc = Math.sin(time * 7 + fish.tailPhase) * (2.5 * scale);
-      const fl = fish.length * scale;
-      const fw = fish.width * scale;
+      const depthScale = 0.65 + fish.depth * 0.35;
+      const fw = fish.baseWidth * scale * depthScale;
+      const fh = fish.baseHeight * scale * depthScale;
+
+      // 1. Dynamic Cast Shadow onto Deeper Water Bed
+      // Deeper fish have shadows offset further down-right; surface fish have tight shadows
+      const shadowDistX = (3 + (1.0 - fish.depth) * 6) * scale;
+      const shadowDistY = (4 + (1.0 - fish.depth) * 14) * scale;
+      const shadowAlpha = 0.25 + fish.depth * 0.35;
 
       ctx.save();
-      ctx.translate(fs.x, fs.y);
+      ctx.translate(fScreen.x + shadowDistX, fScreen.y + shadowDistY);
       ctx.rotate(heading);
-
-      if (fish.depthTier === 'abyss') {
-        ctx.fillStyle = 'rgba(7, 4, 18, 0.72)'; // Deep dark silhouette
-      } else {
-        ctx.fillStyle = 'rgba(18, 28, 64, 0.65)'; // Mid shelf silhouette
-      }
-
-      // Torpedo fish body
+      ctx.fillStyle = `rgba(2, 6, 16, ${shadowAlpha})`;
       ctx.beginPath();
-      ctx.ellipse(0, 0, fl * 0.45, fw * 0.45, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, fw * 0.45, fh * 0.32, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Undulating caudal fin
-      ctx.beginPath();
-      ctx.moveTo(-fl * 0.38, 0);
-      ctx.lineTo(-fl * 0.65, -fw * 0.4 + tailOsc);
-      ctx.lineTo(-fl * 0.65, fw * 0.4 + tailOsc);
-      ctx.closePath();
-      ctx.fill();
-
       ctx.restore();
+
+      // 2. Select Animated Sprite Frame
+      const frames = fish.type === 'koi' ? this.koiFrames : this.deepFishFrames;
+      if (frames.length > 0) {
+        const animIdx = Math.floor(time * 6 + fish.tailPhase) % frames.length;
+        const fishCanvas = frames[animIdx];
+
+        ctx.save();
+        ctx.translate(fScreen.x, fScreen.y);
+        ctx.rotate(heading);
+
+        // Draw clean volumetric fish sprite
+        ctx.drawImage(fishCanvas, -fw / 2, -fh / 2, fw, fh);
+
+        // Water absorption tint for submerged fish (uses source-atop to NEVER leak a box!)
+        if (fish.depth < 0.75) {
+          const tintAlpha = (1.0 - fish.depth) * 0.38;
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.fillStyle = `rgba(12, 38, 64, ${tintAlpha})`;
+          ctx.fillRect(-fw / 2, -fh / 2, fw, fh);
+        }
+
+        ctx.restore();
+      }
     });
 
     // =========================================================================
-    // STEP 5: SWIMMING CELESTIAL KOI PAIR (Mid-water with floor shadow)
+    // STEP 7: GENTLE ANIMATED WATER RIPPLES & SPECULAR LIGHT
     // =========================================================================
-    if (this.koiFrames.length > 0) {
-      const koiSpeed = 0.32;
-      const animIndex = Math.floor(time * 6) % this.koiFrames.length;
-      const koiImg = this.koiFrames[animIndex];
+    this.ripples.forEach(rip => {
+      const rScreen = camera.worldToScreen(rip.x, rip.y + (drop * 0.45) / scale);
+      ctx.strokeStyle = `rgba(186, 230, 253, ${rip.alpha * 0.85})`;
+      ctx.lineWidth = Math.max(1, Math.floor(1.5 * scale));
+      ctx.beginPath();
+      ctx.ellipse(rScreen.x, rScreen.y, rip.radius * scale, rip.radius * 0.65 * scale, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    });
 
-      for (let k = 0; k < 2; k++) {
-        const koiAngle = time * koiSpeed + k * Math.PI;
-        const orbitRx = this.radiusX * 0.44;
-        const orbitRy = this.radiusY * 0.44;
-        const kx = this.centerX + Math.cos(koiAngle) * orbitRx;
-        const ky = this.centerY + Math.sin(koiAngle) * orbitRy;
-        const koiScreen = camera.worldToScreen(kx, ky + (drop * 0.45) / scale);
+    // =========================================================================
+    // STEP 8: CLUSTERED LILY PADS WITH DEEP DROP SHADOWS (Reference Style)
+    // =========================================================================
+    if (this.lilypadCanvas) {
+      const padImg = this.lilypadCanvas;
 
-        const heading = koiAngle + Math.PI / 2;
-        const kw = 24 * scale;
-        const kh = 16 * scale;
+      this.lilypads.forEach((lp, idx) => {
+        const lpScreen = camera.worldToScreen(this.centerX + lp.x, this.centerY + lp.y + (drop * 0.45) / scale);
+        const bobY = Math.sin(time * 1.5 + idx * 0.7) * 1.5 * scale;
+        const padSize = 18 * scale * lp.sizeScale;
 
-        // 1. Projected shadow on pond floor
+        // 1. Soft Dark Drop Shadow Grounding Lily Pad onto Water Surface
         ctx.save();
-        ctx.fillStyle = 'rgba(6, 10, 24, 0.55)';
+        ctx.fillStyle = 'rgba(2, 6, 14, 0.55)';
         ctx.beginPath();
-        ctx.ellipse(koiScreen.x + 3 * scale, koiScreen.y + 6 * scale, kw * 0.4, kh * 0.3, heading, 0, Math.PI * 2);
+        ctx.ellipse(lpScreen.x + 2 * scale, lpScreen.y + 4 * scale, padSize * 0.48, padSize * 0.38, lp.angle, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
-        // 2. Koi Sprite with subtle liquid immersion
+        // 2. Lilypad Sprite on Surface
         ctx.save();
-        ctx.translate(koiScreen.x, koiScreen.y);
-        ctx.rotate(heading);
-        ctx.drawImage(koiImg, -kw / 2, -kh / 2, kw, kh);
-
-        // Water absorption tint over koi
-        ctx.fillStyle = 'rgba(14, 116, 144, 0.18)';
-        ctx.fillRect(-kw / 2, -kh / 2, kw, kh);
+        ctx.translate(lpScreen.x, lpScreen.y + bobY);
+        ctx.rotate(lp.angle);
+        ctx.drawImage(padImg, -padSize / 2, -padSize / 2, padSize, padSize);
         ctx.restore();
-      }
+      });
     }
 
     // =========================================================================
-    // STEP 6: ANIMATED PIXEL WATER CAUSTICS (Optical refractions)
+    // STEP 9: FLOATING SAKURA / LOTUS FLOWER PETALS (Reference Benchmark)
     // =========================================================================
-    const causticStep = Math.max(3, Math.floor(4 * scale));
-    const startX = Math.floor(centerScreen.x - rx);
-    const endX = Math.ceil(centerScreen.x + rx);
-    const startY = Math.floor(waterScreenY - ry);
-    const endY = Math.ceil(waterScreenY + ry);
+    this.petals.forEach(pet => {
+      const pScreen = camera.worldToScreen(this.centerX + pet.x, this.centerY + pet.y + (drop * 0.45) / scale);
+      const pBob = Math.sin(time * 2.0 + pet.phase) * 1.2 * scale;
+      const pSize = pet.size * scale;
 
-    for (let py = startY; py < endY; py += causticStep) {
-      for (let px = startX; px < endX; px += causticStep) {
-        const ndx = (px - centerScreen.x) / rx;
-        const ndy = (py - waterScreenY) / ry;
-        const distSq = ndx * ndx + ndy * ndy;
+      // Petal contact shadow
+      ctx.fillStyle = 'rgba(3, 8, 18, 0.45)';
+      ctx.fillRect(Math.floor(pScreen.x + 1 * scale), Math.floor(pScreen.y + 2 * scale), Math.floor(pSize), Math.floor(pSize));
 
-        if (distSq < 0.94) {
-          const distNorm = Math.sqrt(distSq);
-          // Dual wave interference formula
-          const c1 = Math.sin(px * 0.05 + time * 1.4) * Math.cos(py * 0.06 - time * 0.9);
-          const c2 = Math.sin((px + py) * 0.04 + time * 0.8);
-          const caustic = c1 + c2;
-
-          if (caustic > 0.65) {
-            // Bright in shallows, fading over deep abyss
-            const alpha = Math.min(0.35, (0.15 + distNorm * 0.3) * (caustic - 0.65) * 1.5);
-            ctx.fillStyle = `rgba(186, 230, 253, ${alpha})`;
-            const sz = Math.max(1, Math.floor(2 * scale));
-            ctx.fillRect(px, py, sz, sz);
-          }
-        }
-      }
-    }
+      // Floating Petal Body
+      ctx.fillStyle = pet.color;
+      ctx.fillRect(Math.floor(pScreen.x), Math.floor(pScreen.y + pBob), Math.floor(pSize), Math.floor(pSize));
+    });
 
     // =========================================================================
-    // STEP 7: NORTHERN BANK OVERHANG CAST SHADOW (Recesses water below bank)
+    // STEP 10: INNER SHORELINE DROP SHADOW (Grounds rocks into water)
     // =========================================================================
     const shadowSteps = 16;
     for (let step = 0; step < shadowSteps; step++) {
       const alpha = (1 - step / shadowSteps) * 0.55;
-      ctx.strokeStyle = `rgba(4, 2, 12, ${alpha})`;
+      ctx.strokeStyle = `rgba(3, 2, 10, ${alpha})`;
       ctx.lineWidth = Math.max(1, Math.floor(2 * scale));
       ctx.beginPath();
       ctx.arc(
@@ -528,31 +613,15 @@ export class StarpondWater2D {
     }
 
     // =========================================================================
-    // STEP 8: RISING BIOLUMINESCENT PLANKTON MOTES & STARLIGHT GLINTS
-    // =========================================================================
-    this.biomotes.forEach(mote => {
-      const ms = camera.worldToScreen(this.centerX + mote.x, this.centerY + mote.y + (drop * 0.45) / scale);
-      ctx.fillStyle = `rgba(125, 211, 252, ${mote.alpha})`;
-      ctx.fillRect(Math.floor(ms.x), Math.floor(ms.y), Math.floor(mote.size * scale), Math.floor(mote.size * scale));
-    });
-
-    this.glints.forEach(st => {
-      const alpha = 0.25 + Math.sin(time * st.speed + st.phase) * 0.45;
-      ctx.fillStyle = `rgba(254, 243, 199, ${alpha})`;
-      const screenPos = camera.worldToScreen(this.centerX + st.x, this.centerY + st.y + (drop * 0.45) / scale);
-      ctx.fillRect(Math.floor(screenPos.x), Math.floor(screenPos.y), Math.floor(st.size * scale), Math.floor(st.size * scale));
-    });
-
-    // =========================================================================
-    // STEP 9: STEPPED PIXEL WATER FOAM FRINGE (Shoreline Lapping)
+    // STEP 11: STEPPED WATER FOAM FRINGE ALONG INNER SHORELINE
     // =========================================================================
     const foamFrame = Math.floor(time * 2.8) % 4;
     const foamCount = 48;
     const foamColors = [
-      'rgba(125, 211, 252, 0.40)',
-      'rgba(186, 230, 253, 0.55)',
-      'rgba(224, 242, 254, 0.65)',
-      'rgba(125, 211, 252, 0.35)'
+      'rgba(125, 211, 252, 0.35)',
+      'rgba(186, 230, 253, 0.50)',
+      'rgba(224, 242, 254, 0.60)',
+      'rgba(125, 211, 252, 0.30)'
     ];
     ctx.fillStyle = foamColors[foamFrame];
 
@@ -564,49 +633,10 @@ export class StarpondWater2D {
       ctx.fillRect(Math.floor(fx), Math.floor(fy), Math.floor(fSize), Math.floor(fSize));
     }
 
-    // =========================================================================
-    // STEP 10: RADIATING STEPPED PIXEL WATER RIPPLES
-    // =========================================================================
-    this.ripples.forEach(rip => {
-      const rScreen = camera.worldToScreen(rip.x, rip.y + (drop * 0.45) / scale);
-      ctx.strokeStyle = `rgba(125, 211, 252, ${rip.alpha * 0.85})`;
-      ctx.lineWidth = Math.max(1, Math.floor(1.5 * scale));
-      ctx.beginPath();
-      ctx.ellipse(rScreen.x, rScreen.y, rip.radius * scale, rip.radius * 0.65 * scale, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    });
-
-    // =========================================================================
-    // STEP 11: FLOATING LOTUS LILYPADS WITH PROJECTED FLOOR SHADOWS
-    // =========================================================================
-    if (this.lilypadCanvas) {
-      const padImg = this.lilypadCanvas;
-      this.lilypads.forEach((lp, idx) => {
-        const lpScreen = camera.worldToScreen(this.centerX + lp.x, this.centerY + lp.y + (drop * 0.45) / scale);
-        const bobY = Math.sin(time * 1.6 + idx) * 1.5 * scale;
-        const padSize = 18 * scale;
-
-        // Lilypad cast shadow on floor
-        ctx.save();
-        ctx.fillStyle = 'rgba(6, 12, 26, 0.50)';
-        ctx.beginPath();
-        ctx.ellipse(lpScreen.x + 2 * scale, lpScreen.y + 4 * scale, padSize * 0.45, padSize * 0.35, lp.angle, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // Lilypad on surface
-        ctx.save();
-        ctx.translate(lpScreen.x, lpScreen.y + bobY);
-        ctx.rotate(lp.angle);
-        ctx.drawImage(padImg, -padSize / 2, -padSize / 2, padSize, padSize);
-        ctx.restore();
-      });
-    }
-
     ctx.restore(); // End clipping
 
     // =========================================================================
-    // STEP 12: HANDCRAFTED PERIMETER SHORELINE ROCKS (Dry top & Wet base)
+    // STEP 12: HANDCRAFTED PERIMETER SHORELINE ROCKS (Wet base & Dry highlight)
     // =========================================================================
     this.shorelineRocks.forEach(rock => {
       const wx = this.centerX + Math.cos(rock.angle) * this.radiusX * rock.dist;
@@ -617,7 +647,7 @@ export class StarpondWater2D {
       const rh = rock.height * scale;
 
       // 1. Base Ground Contact Shadow
-      ctx.fillStyle = '#0c0a1a';
+      ctx.fillStyle = '#0a0818';
       ctx.fillRect(Math.floor(rockScreen.x - rw / 2 + 1 * scale), Math.floor(rockScreen.y - rh / 2 + 2 * scale), Math.floor(rw), Math.floor(rh));
 
       // 2. Main Rock Body
