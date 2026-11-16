@@ -77,7 +77,9 @@ export class PixelCat {
   public facePoint(targetX: number, targetY: number): void {
     const dx = targetX - this.x;
     const dy = targetY - this.y;
-    if (Math.abs(dx) > Math.abs(dy)) {
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    if (absDx > 0.05 && absDx >= absDy * 0.7) {
       this.facing = dx > 0 ? 'right' : 'left';
     } else {
       this.facing = dy > 0 ? 'down' : 'up';
@@ -103,10 +105,16 @@ export class PixelCat {
       this.x += this.vx * delta;
       this.y += this.vy * delta;
 
-      // Update 4-way facing direction
-      if (Math.abs(moveVector.dx) > Math.abs(moveVector.dy)) {
+      // Update 4-way facing direction:
+      // Diagonals (W+A, W+D, S+A, S+D) and pure horizontals (A, D) prioritize left/right facing
+      // so the character strides forward in its horizontal direction of travel, eliminating moonwalking.
+      // Pure or dominant vertical movement (W, S) faces 'up' or 'down'.
+      const absDx = Math.abs(moveVector.dx);
+      const absDy = Math.abs(moveVector.dy);
+
+      if (absDx > 0.05 && absDx >= absDy * 0.7) {
         this.facing = moveVector.dx > 0 ? 'right' : 'left';
-      } else {
+      } else if (absDy > 0.05) {
         this.facing = moveVector.dy > 0 ? 'down' : 'up';
       }
 
@@ -139,8 +147,12 @@ export class PixelCat {
   private getPackAnimationName(): CharacterAnimationName {
     switch (this.animState) {
       case 'walk':
+        if (this.facing === 'up') return 'walk_up';
+        if (this.facing === 'down') return 'walk_down';
         return 'walk';
       case 'run':
+        if (this.facing === 'up') return 'run_up';
+        if (this.facing === 'down') return 'run_down';
         return 'run';
       case 'fish_cast':
       case 'fish_wait':

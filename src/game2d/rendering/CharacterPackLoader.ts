@@ -10,7 +10,11 @@ import { CatBreed } from '../../types/game';
 export type CharacterAnimationName =
   | 'idle'
   | 'walk'
+  | 'walk_up'
+  | 'walk_down'
   | 'run'
+  | 'run_up'
+  | 'run_down'
   | 'sit'
   | 'sleep'
   | 'happy'
@@ -30,7 +34,11 @@ export interface AnimationMeta {
 export const ANIMATION_METADATA: Record<CharacterAnimationName, AnimationMeta> = {
   idle: { frameCount: 8, fps: 8, loop: true },
   walk: { frameCount: 8, fps: 10, loop: true },
+  walk_up: { frameCount: 8, fps: 10, loop: true },
+  walk_down: { frameCount: 8, fps: 10, loop: true },
   run: { frameCount: 8, fps: 14, loop: true },
+  run_up: { frameCount: 8, fps: 14, loop: true },
+  run_down: { frameCount: 8, fps: 14, loop: true },
   sit: { frameCount: 6, fps: 8, loop: false },
   sleep: { frameCount: 8, fps: 6, loop: true },
   happy: { frameCount: 8, fps: 10, loop: true },
@@ -62,7 +70,8 @@ export class CharacterPackLoader {
   // Preload all sheets and portraits for a breed
   public preloadBreed(breed: CatBreed): void {
     const anims: CharacterAnimationName[] = [
-      'idle', 'walk', 'run', 'sit', 'sleep', 'happy', 'petting', 'fishing', 'fishing_reaction', 'jump'
+      'idle', 'walk', 'walk_up', 'walk_down', 'run', 'run_up', 'run_down',
+      'sit', 'sleep', 'happy', 'petting', 'fishing', 'fishing_reaction', 'jump'
     ];
     for (const anim of anims) {
       this.getSpriteSheet(breed, anim);
