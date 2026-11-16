@@ -1,9 +1,43 @@
 import { SaveManager } from '../save/SaveManager';
+import { BGMTrackId } from '../../types/game';
+
+export interface BGMTrackInfo {
+  id: BGMTrackId;
+  title: string;
+  artist: string;
+  mood: string;
+  url: string;
+}
+
+export const BGM_TRACKS: Record<BGMTrackId, BGMTrackInfo> = {
+  space_sprinkles: {
+    id: 'space_sprinkles',
+    title: 'Space Sprinkles (Happy Galaxy)',
+    artist: 'Matthew Pablo',
+    mood: 'Cheerful & whimsical chiptune celestial starlight melody',
+    url: '/assets/audio/bgm/space_sprinkles.ogg',
+  },
+  mesmerizing_galaxy: {
+    id: 'mesmerizing_galaxy',
+    title: 'Mesmerizing Galaxy (Cosmic Synth)',
+    artist: 'Kevin MacLeod',
+    mood: 'Breezy & uplifting ambient electronic loop',
+    url: '/assets/audio/bgm/mesmerizing_galaxy.mp3',
+  },
+  cosmic_ambient: {
+    id: 'cosmic_ambient',
+    title: 'Cosmic Ambient (Night Drone)',
+    artist: 'Wish Me Cat Sound',
+    mood: 'Calm, gentle midnight cosmic atmosphere',
+    url: '/assets/audio/bgm/cosmic_ambient_loop.ogg',
+  },
+};
 
 export class AudioManager {
   private static instance: AudioManager;
   private ctx: AudioContext | null = null;
   private bgmAudio: HTMLAudioElement | null = null;
+  private currentTrackId: BGMTrackId = 'space_sprinkles';
   private isMuted: boolean = false;
   private masterVol: number = 1.0;
   private bgmVol: number = 0.7;
@@ -14,6 +48,7 @@ export class AudioManager {
     this.masterVol = data.masterVolume ?? 1.0;
     this.bgmVol = data.bgmVolume ?? 0.7;
     this.sfxVol = data.sfxVolume ?? 0.9;
+    this.currentTrackId = data.bgmTrack ?? 'space_sprinkles';
   }
 
   public static getInstance(): AudioManager {
@@ -35,16 +70,49 @@ export class AudioManager {
     }
   }
 
-  public startBGM(): void {
+  public getCurrentTrack(): BGMTrackId {
+    return this.currentTrackId;
+  }
+
+  public getCurrentTrackInfo(): BGMTrackInfo {
+    return BGM_TRACKS[this.currentTrackId] || BGM_TRACKS.space_sprinkles;
+  }
+
+  public startBGM(trackId?: BGMTrackId): void {
     this.initContext();
+    if (trackId) {
+      this.currentTrackId = trackId;
+    }
+    const track = BGM_TRACKS[this.currentTrackId] || BGM_TRACKS.space_sprinkles;
+
     if (!this.bgmAudio) {
-      this.bgmAudio = new Audio('/assets/audio/bgm/cosmic_ambient_loop.ogg');
+      this.bgmAudio = new Audio(track.url);
       this.bgmAudio.loop = true;
-      this.bgmAudio.volume = this.masterVol * this.bgmVol;
+      this.bgmAudio.volume = this.isMuted ? 0 : this.masterVol * this.bgmVol;
       this.bgmAudio.play().catch(() => {
         // Autoplay may be blocked until user gesture, which is normal
       });
     } else if (this.bgmAudio.paused) {
+      this.bgmAudio.play().catch(() => {});
+    }
+  }
+
+  public changeTrack(trackId: BGMTrackId): void {
+    this.initContext();
+    this.currentTrackId = trackId;
+    SaveManager.save({ bgmTrack: trackId });
+    const track = BGM_TRACKS[trackId] || BGM_TRACKS.space_sprinkles;
+
+    if (!this.bgmAudio) {
+      this.startBGM(trackId);
+      return;
+    }
+
+    const wasPlaying = !this.bgmAudio.paused;
+    this.bgmAudio.src = track.url;
+    this.bgmAudio.loop = true;
+    this.bgmAudio.volume = this.isMuted ? 0 : this.masterVol * this.bgmVol;
+    if (wasPlaying) {
       this.bgmAudio.play().catch(() => {});
     }
   }

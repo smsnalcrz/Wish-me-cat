@@ -106,7 +106,7 @@ export const App: React.FC = () => {
   };
 
   const handleStartGame = () => {
-    audio.startBGM();
+    audio.startBGM(saveData.bgmTrack || 'space_sprinkles');
     setHasEnteredGame(true);
   };
 

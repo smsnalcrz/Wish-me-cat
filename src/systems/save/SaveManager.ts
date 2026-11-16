@@ -25,7 +25,8 @@ export const DEFAULT_SAVE: SaveData = {
   bgmVolume: 0.7,
   sfxVolume: 0.9,
   cameraSensitivity: 1.5,
-  catBreed: 'celestial'
+  catBreed: 'celestial',
+  bgmTrack: 'space_sprinkles'
 };
 
 export class SaveManager {

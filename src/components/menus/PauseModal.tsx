@@ -1,7 +1,7 @@
 import React from 'react';
-import { SaveData } from '../../types/game';
+import { SaveData, BGMTrackId } from '../../types/game';
 import { SaveManager } from '../../systems/save/SaveManager';
-import { AudioManager } from '../../systems/audio/AudioManager';
+import { AudioManager, BGM_TRACKS } from '../../systems/audio/AudioManager';
 import { PixelCloseIcon, PixelCatIcon } from '../ui/PixelIcons';
 
 interface PauseModalProps {
@@ -13,12 +13,22 @@ interface PauseModalProps {
 
 export const PauseModal: React.FC<PauseModalProps> = ({ saveData, onClose, onUpdateSave, onNotify }) => {
   const audio = AudioManager.getInstance();
+  const currentBgm = saveData.bgmTrack || audio.getCurrentTrack();
 
   const handleVolumeChange = (type: 'masterVolume' | 'bgmVolume' | 'sfxVolume', val: number) => {
     const newSave = { ...saveData, [type]: val };
     SaveManager.save(newSave);
     onUpdateSave(newSave);
     audio.setVolumes(newSave.masterVolume, newSave.bgmVolume, newSave.sfxVolume);
+  };
+
+  const handleTrackChange = (trackId: BGMTrackId) => {
+    audio.changeTrack(trackId);
+    const newSave = { ...saveData, bgmTrack: trackId };
+    SaveManager.save(newSave);
+    onUpdateSave(newSave);
+    audio.playClick();
+    onNotify('MUSIC UPDATED', `Now playing: ${BGM_TRACKS[trackId]?.title || trackId}`);
   };
 
   const handleManualSave = () => {
@@ -91,6 +101,47 @@ export const PauseModal: React.FC<PauseModalProps> = ({ saveData, onClose, onUpd
               onChange={(e) => handleVolumeChange('sfxVolume', parseFloat(e.target.value))}
               style={{ width: '100%', accentColor: '#38bdf8' }}
             />
+          </div>
+
+          {/* BGM Track Selector */}
+          <div style={{ borderTop: '1px solid #281f4a', paddingTop: '10px' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-heading)', color: '#fbbf24', marginBottom: '8px' }}>
+              CELESTIAL BGM THEME
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {(Object.keys(BGM_TRACKS) as BGMTrackId[]).map((trackId) => {
+                const track = BGM_TRACKS[trackId];
+                const isSelected = currentBgm === trackId;
+                return (
+                  <button
+                    key={trackId}
+                    type="button"
+                    onClick={() => handleTrackChange(trackId)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      padding: '8px 10px',
+                      background: isSelected ? 'rgba(56, 189, 248, 0.15)' : '#140f28',
+                      border: isSelected ? '2px solid #38bdf8' : '1px solid #2d2250',
+                      color: isSelected ? '#38bdf8' : '#e2e8f0',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontFamily: 'inherit',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ fontSize: '11px', fontWeight: 'bold' }}>
+                      {isSelected ? '▶ ' : '  '}
+                      {track.title}
+                    </div>
+                    <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '2px' }}>
+                      {track.artist} • {track.mood}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

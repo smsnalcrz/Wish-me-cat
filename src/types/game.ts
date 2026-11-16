@@ -124,7 +124,10 @@ export interface SaveData {
   sfxVolume: number;
   cameraSensitivity: number;
   catBreed?: CatBreed;
+  bgmTrack?: BGMTrackId;
 }
+
+export type BGMTrackId = 'space_sprinkles' | 'mesmerizing_galaxy' | 'cosmic_ambient';
 
 export interface CatchResult {
   creature: CelestialCreature;
