@@ -1,15 +1,27 @@
 /**
  * PixelCat.ts
  * 2D Pixel-Art Cat mascot for Wish Me Cat.
- * Manages 4-way direction, sprite animations, movement physics, and fishing states.
+ * Manages 4-way direction, high-definition character pack animations,
+ * movement physics, and fishing states for all 4 feline breeds.
  */
 
 import { CatBreed } from '../../types/game';
 import { CatSpriteSheet, generateCatSpriteSheet } from '../rendering/PixelSprites';
+import { CharacterPackLoader, CharacterAnimationName, ANIMATION_METADATA } from '../rendering/CharacterPackLoader';
 import { Camera2D } from '../core/Camera2D';
 
 export type CatFacing = 'down' | 'up' | 'left' | 'right';
-export type CatAnimState = 'idle' | 'walk' | 'fish_cast' | 'fish_wait' | 'fish_bite' | 'fish_reel' | 'celebrate';
+export type CatAnimState =
+  | 'idle'
+  | 'walk'
+  | 'run'
+  | 'fish_cast'
+  | 'fish_wait'
+  | 'fish_bite'
+  | 'fish_reel'
+  | 'celebrate'
+  | 'sit'
+  | 'sleep';
 
 export class PixelCat {
   public x: number = 0;
@@ -27,6 +39,9 @@ export class PixelCat {
   private animTimer: number = 0;
   private animFrame: number = 0;
 
+  // Character Pack Loader
+  private loader: CharacterPackLoader;
+
   // Breed Spritesheet
   public breed: CatBreed = 'celestial';
   private spriteSheet: CatSpriteSheet;
@@ -38,12 +53,15 @@ export class PixelCat {
     this.breed = breed;
     this.x = initialX;
     this.y = initialY;
+    this.loader = CharacterPackLoader.getInstance();
+    this.loader.preloadBreed(breed);
     this.spriteSheet = generateCatSpriteSheet(breed);
   }
 
   public setBreed(newBreed: CatBreed): void {
     if (this.breed !== newBreed) {
       this.breed = newBreed;
+      this.loader.preloadBreed(newBreed);
       this.spriteSheet = generateCatSpriteSheet(newBreed);
     }
   }
@@ -70,7 +88,14 @@ export class PixelCat {
     const isMoving = Math.hypot(moveVector.dx, moveVector.dy) > 0.05;
 
     // Movement Physics
-    if (isMoving && this.animState !== 'fish_cast' && this.animState !== 'fish_wait' && this.animState !== 'fish_bite' && this.animState !== 'celebrate') {
+    const isFishingOrCelebrating =
+      this.animState === 'fish_cast' ||
+      this.animState === 'fish_wait' ||
+      this.animState === 'fish_bite' ||
+      this.animState === 'fish_reel' ||
+      this.animState === 'celebrate';
+
+    if (isMoving && !isFishingOrCelebrating) {
       const speed = moveVector.isRunning ? this.runSpeed : this.walkSpeed;
       this.vx = moveVector.dx * speed;
       this.vy = moveVector.dy * speed;
@@ -85,90 +110,151 @@ export class PixelCat {
         this.facing = moveVector.dy > 0 ? 'down' : 'up';
       }
 
-      this.animState = 'walk';
+      this.animState = moveVector.isRunning ? 'run' : 'walk';
     } else {
       this.vx = 0;
       this.vy = 0;
-      if (this.animState === 'walk') {
+      if (this.animState === 'walk' || this.animState === 'run') {
         this.animState = 'idle';
       }
     }
 
-    // Advance Animation Timer
+    // Determine target animation metadata for frame timing
+    const packAnim = this.getPackAnimationName();
+    const meta = ANIMATION_METADATA[packAnim] || { frameCount: 8, fps: 8, loop: true };
+
     this.animTimer += delta;
-    const frameRate = this.animState === 'walk' ? 0.15 : 0.45;
-    if (this.animTimer >= frameRate) {
-      this.animTimer = 0;
-      this.animFrame = (this.animFrame + 1) % 2;
+    const frameDuration = 1 / meta.fps;
+    if (this.animTimer >= frameDuration) {
+      this.animTimer -= frameDuration;
+      if (meta.loop) {
+        this.animFrame = (this.animFrame + 1) % meta.frameCount;
+      } else {
+        this.animFrame = Math.min(this.animFrame + 1, meta.frameCount - 1);
+      }
+    }
+  }
+
+  // Map internal game state to character pack animation sheet
+  private getPackAnimationName(): CharacterAnimationName {
+    switch (this.animState) {
+      case 'walk':
+        return 'walk';
+      case 'run':
+        return 'run';
+      case 'fish_cast':
+      case 'fish_wait':
+      case 'fish_reel':
+        return 'fishing';
+      case 'fish_bite':
+        return 'fishing_reaction';
+      case 'celebrate':
+        return 'happy';
+      case 'sit':
+        return 'sit';
+      case 'sleep':
+        return 'sleep';
+      case 'idle':
+      default:
+        return 'idle';
     }
   }
 
   // Get current fishing rod tip coordinate in world space for line attachment
   public getRodTipWorldPos(): { x: number; y: number } {
-    let offsetX = 10;
-    let offsetY = -2;
-
-    if (this.animState === 'fish_cast') {
-      offsetX = 7;
-      offsetY = -15;
-    } else if (this.facing === 'up') {
-      offsetX = 4;
-      offsetY = -14;
-    } else if (this.facing === 'down') {
-      offsetX = 4;
-      offsetY = 6;
-    }
-
-    if (this.facing === 'left') {
-      offsetX = -offsetX;
-    }
-
+    const isFlipped = this.facing === 'left';
+    // Anchored to the exact wooden rod tip in fishing.png & fishing_reaction.png
+    const offsetX = isFlipped ? -17 : 17;
+    const offsetY = -23;
     return { x: this.x + offsetX, y: this.y + offsetY };
   }
 
-  // Render Cat with Pixel-Art Shadow and Sprite
+  // Render Cat with Pixel-Art Shadow and Character Pack Sprite
   public render(ctx: CanvasRenderingContext2D, camera: Camera2D): void {
     const screen = camera.worldToScreen(this.x, this.y);
     const scale = camera.zoom;
 
-    // 1. Cozy Drop Shadow Underneath
+    // 1. Cozy Drop Shadow Underneath Paws
     ctx.save();
-    ctx.fillStyle = 'rgba(10, 8, 25, 0.4)';
+    ctx.fillStyle = 'rgba(10, 8, 25, 0.45)';
     ctx.beginPath();
-    ctx.ellipse(screen.x, screen.y + 7 * scale, 10 * scale, 4.5 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(screen.x, screen.y, 14 * scale, 5 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // 2. Determine Sprite to Draw
-    let sprite: HTMLCanvasElement;
-    let flipX = false;
+    // 2. Render High-Definition Character Pack Sprite
+    const destSize = 44 * scale;
+    const flipX = this.facing === 'left';
+    const packAnim = this.getPackAnimationName();
 
-    if (this.animState === 'fish_cast' || this.animState === 'fish_bite') {
-      sprite = this.spriteSheet.fishCast;
-      if (this.facing === 'left') flipX = true;
-    } else if (this.animState === 'fish_wait' || this.animState === 'fish_reel') {
-      sprite = this.animState === 'fish_reel' ? this.spriteSheet.fishReel[this.animFrame] : this.spriteSheet.fishWait;
-      if (this.facing === 'left') flipX = true;
-    } else if (this.animState === 'celebrate') {
-      sprite = this.spriteSheet.celebrate;
-    } else if (this.animState === 'walk') {
-      if (this.facing === 'down') sprite = this.spriteSheet.walkDown[this.animFrame];
-      else if (this.facing === 'up') sprite = this.spriteSheet.walkUp[this.animFrame];
-      else {
-        sprite = this.spriteSheet.walkSide[this.animFrame];
-        if (this.facing === 'left') flipX = true;
-      }
+    let drawn = false;
+
+    // For stationary idle facing directly up, draw the back portrait
+    if (this.animState === 'idle' && this.facing === 'up') {
+      drawn = this.loader.drawPortrait(ctx, this.breed, 'back', screen.x, screen.y, destSize);
     } else {
-      // Idle
-      if (this.facing === 'down') sprite = this.spriteSheet.idleDown;
-      else if (this.facing === 'up') sprite = this.spriteSheet.idleUp;
-      else {
-        sprite = this.spriteSheet.idleSide;
-        if (this.facing === 'left') flipX = true;
-      }
+      drawn = this.loader.drawFrame(
+        ctx,
+        this.breed,
+        packAnim,
+        this.animFrame,
+        screen.x,
+        screen.y,
+        destSize,
+        flipX
+      );
     }
 
-    // 3. Draw Cat Sprite (centered on screen position)
+    // 3. Fallback to procedural sprite if image asset is not yet loaded
+    if (!drawn) {
+      this.renderFallbackSprite(ctx, screen, scale, flipX);
+    }
+
+    // 4. Bite Reaction Exclamation Mark (!) (Pixel Bubble)
+    if (this.animState === 'fish_bite') {
+      ctx.save();
+      const jumpY = Math.sin(performance.now() * 0.02) * 4 * scale;
+      const bubbleX = screen.x;
+      const bubbleY = screen.y - 38 * scale + jumpY;
+
+      // Pixel Bubble Box
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(bubbleX - 8 * scale, bubbleY - 8 * scale, 16 * scale, 16 * scale);
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeRect(bubbleX - 8 * scale, bubbleY - 8 * scale, 16 * scale, 16 * scale);
+
+      ctx.font = `bold ${Math.max(10, Math.floor(10 * scale))}px 'Press Start 2P', monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('!', bubbleX, bubbleY);
+      ctx.restore();
+    }
+  }
+
+  // Graceful fallback to procedural canvas matrix
+  private renderFallbackSprite(
+    ctx: CanvasRenderingContext2D,
+    screen: { x: number; y: number },
+    scale: number,
+    flipX: boolean
+  ): void {
+    let sprite: HTMLCanvasElement;
+    if (this.animState === 'fish_cast' || this.animState === 'fish_bite') {
+      sprite = this.spriteSheet.fishCast;
+    } else if (this.animState === 'fish_wait' || this.animState === 'fish_reel') {
+      sprite = this.animState === 'fish_reel' ? this.spriteSheet.fishReel[this.animFrame % 2] : this.spriteSheet.fishWait;
+    } else if (this.animState === 'celebrate') {
+      sprite = this.spriteSheet.celebrate;
+    } else if (this.animState === 'walk' || this.animState === 'run') {
+      if (this.facing === 'down') sprite = this.spriteSheet.walkDown[this.animFrame % 2];
+      else if (this.facing === 'up') sprite = this.spriteSheet.walkUp[this.animFrame % 2];
+      else sprite = this.spriteSheet.walkSide[this.animFrame % 2];
+    } else {
+      if (this.facing === 'down') sprite = this.spriteSheet.idleDown;
+      else if (this.facing === 'up') sprite = this.spriteSheet.idleUp;
+      else sprite = this.spriteSheet.idleSide;
+    }
+
     const drawW = 24 * scale;
     const drawH = 24 * scale;
     const drawX = Math.round(screen.x - drawW / 2);
@@ -183,25 +269,5 @@ export class PixelCat {
       ctx.drawImage(sprite, drawX, drawY, drawW, drawH);
     }
     ctx.restore();
-
-    // 4. Bite Reaction Exclamation Mark (!) (Pixel Bubble)
-    if (this.animState === 'fish_bite') {
-      ctx.save();
-      const jumpY = Math.sin(performance.now() * 0.02) * 4 * scale;
-      const bubbleX = screen.x;
-      const bubbleY = drawY - 14 * scale + jumpY;
-
-      // Pixel Bubble Box
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(bubbleX - 8 * scale, bubbleY - 8 * scale, 16 * scale, 16 * scale);
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeRect(bubbleX - 8 * scale, bubbleY - 8 * scale, 16 * scale, 16 * scale);
-
-      ctx.font = `bold ${Math.max(10, Math.floor(10 * scale))}px 'Press Start 2P', monospace`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('!', bubbleX, bubbleY);
-      ctx.restore();
-    }
   }
 }

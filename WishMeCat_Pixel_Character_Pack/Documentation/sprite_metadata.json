@@ -1,0 +1,291 @@
+{
+  "character": "Wish Me Cat",
+  "version": "1.0.0",
+  "format": "PNG (RGBA8888, Fully Transparent Background)",
+  "frame_resolution": {
+    "width": 128,
+    "height": 128,
+    "logical_pixel_grid": "64x64 upscaled 2x Nearest-Neighbor"
+  },
+  "ground_baseline_y": 108,
+  "animations": [
+    {
+      "animation_name": "idle",
+      "filename": "SpriteSheets/idle.png",
+      "individual_frames_folder": "IndividualFrames/idle/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 8,
+      "looping": true,
+      "frame_ordering": [
+        "idle_01.png",
+        "idle_02.png",
+        "idle_03.png",
+        "idle_04.png",
+        "idle_05.png",
+        "idle_06.png",
+        "idle_07.png",
+        "idle_08.png"
+      ]
+    },
+    {
+      "animation_name": "walk",
+      "filename": "SpriteSheets/walk.png",
+      "individual_frames_folder": "IndividualFrames/walk/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 10,
+      "looping": true,
+      "frame_ordering": [
+        "walk_01.png",
+        "walk_02.png",
+        "walk_03.png",
+        "walk_04.png",
+        "walk_05.png",
+        "walk_06.png",
+        "walk_07.png",
+        "walk_08.png"
+      ]
+    },
+    {
+      "animation_name": "run",
+      "filename": "SpriteSheets/run.png",
+      "individual_frames_folder": "IndividualFrames/run/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 14,
+      "looping": true,
+      "frame_ordering": [
+        "run_01.png",
+        "run_02.png",
+        "run_03.png",
+        "run_04.png",
+        "run_05.png",
+        "run_06.png",
+        "run_07.png",
+        "run_08.png"
+      ]
+    },
+    {
+      "animation_name": "sit",
+      "filename": "SpriteSheets/sit.png",
+      "individual_frames_folder": "IndividualFrames/sit/",
+      "frame_count": 6,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 768,
+        "height": 128
+      },
+      "recommended_playback_fps": 8,
+      "looping": false,
+      "frame_ordering": [
+        "sit_01.png",
+        "sit_02.png",
+        "sit_03.png",
+        "sit_04.png",
+        "sit_05.png",
+        "sit_06.png"
+      ]
+    },
+    {
+      "animation_name": "sleep",
+      "filename": "SpriteSheets/sleep.png",
+      "individual_frames_folder": "IndividualFrames/sleep/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 6,
+      "looping": true,
+      "frame_ordering": [
+        "sleep_01.png",
+        "sleep_02.png",
+        "sleep_03.png",
+        "sleep_04.png",
+        "sleep_05.png",
+        "sleep_06.png",
+        "sleep_07.png",
+        "sleep_08.png"
+      ]
+    },
+    {
+      "animation_name": "happy",
+      "filename": "SpriteSheets/happy.png",
+      "individual_frames_folder": "IndividualFrames/happy/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 10,
+      "looping": true,
+      "frame_ordering": [
+        "happy_01.png",
+        "happy_02.png",
+        "happy_03.png",
+        "happy_04.png",
+        "happy_05.png",
+        "happy_06.png",
+        "happy_07.png",
+        "happy_08.png"
+      ]
+    },
+    {
+      "animation_name": "petting",
+      "filename": "SpriteSheets/petting.png",
+      "individual_frames_folder": "IndividualFrames/petting/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 8,
+      "looping": true,
+      "frame_ordering": [
+        "petting_01.png",
+        "petting_02.png",
+        "petting_03.png",
+        "petting_04.png",
+        "petting_05.png",
+        "petting_06.png",
+        "petting_07.png",
+        "petting_08.png"
+      ]
+    },
+    {
+      "animation_name": "fishing",
+      "filename": "SpriteSheets/fishing.png",
+      "individual_frames_folder": "IndividualFrames/fishing/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 8,
+      "looping": true,
+      "frame_ordering": [
+        "fishing_01.png",
+        "fishing_02.png",
+        "fishing_03.png",
+        "fishing_04.png",
+        "fishing_05.png",
+        "fishing_06.png",
+        "fishing_07.png",
+        "fishing_08.png"
+      ]
+    },
+    {
+      "animation_name": "fishing_reaction",
+      "filename": "SpriteSheets/fishing_reaction.png",
+      "individual_frames_folder": "IndividualFrames/fishing_reaction/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 12,
+      "looping": false,
+      "frame_ordering": [
+        "fishing_reaction_01.png",
+        "fishing_reaction_02.png",
+        "fishing_reaction_03.png",
+        "fishing_reaction_04.png",
+        "fishing_reaction_05.png",
+        "fishing_reaction_06.png",
+        "fishing_reaction_07.png",
+        "fishing_reaction_08.png"
+      ]
+    },
+    {
+      "animation_name": "jump",
+      "filename": "SpriteSheets/jump.png",
+      "individual_frames_folder": "IndividualFrames/jump/",
+      "frame_count": 8,
+      "frame_width": 128,
+      "frame_height": 128,
+      "total_sprite_sheet_dimensions": {
+        "width": 1024,
+        "height": 128
+      },
+      "recommended_playback_fps": 12,
+      "looping": false,
+      "frame_ordering": [
+        "jump_01.png",
+        "jump_02.png",
+        "jump_03.png",
+        "jump_04.png",
+        "jump_05.png",
+        "jump_06.png",
+        "jump_07.png",
+        "jump_08.png"
+      ]
+    }
+  ],
+  "portraits": {
+    "front": {
+      "filename": "CharacterPortraits/front.png",
+      "width": 128,
+      "height": 128
+    },
+    "side": {
+      "filename": "CharacterPortraits/side.png",
+      "width": 128,
+      "height": 128
+    },
+    "back": {
+      "filename": "CharacterPortraits/back.png",
+      "width": 128,
+      "height": 128
+    },
+    "icon": {
+      "filename": "CharacterPortraits/icon.png",
+      "width": 128,
+      "height": 128
+    }
+  },
+  "expressions": {
+    "filename": "Expressions/expressions.png",
+    "frame_count": 6,
+    "frame_width": 128,
+    "frame_height": 128,
+    "total_dimensions": {
+      "width": 768,
+      "height": 128
+    },
+    "expression_order": [
+      "Happy",
+      "Sleepy",
+      "Curious",
+      "Surprised",
+      "Sad",
+      "Excited"
+    ]
+  }
+}

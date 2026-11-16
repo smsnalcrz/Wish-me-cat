@@ -102,28 +102,48 @@ export const CatWardrobeModal: React.FC<CatWardrobeModalProps> = ({
                   </div>
 
                   {/* Breed Name & Title with 2D Pixel Sprite Preview */}
-                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{
-                      width: '44px',
-                      height: '44px',
+                      width: '54px',
+                      height: '54px',
                       background: '#070514',
-                      border: `1px solid ${breed.primaryColorHex}`,
+                      border: `2px solid ${isEquipped ? '#38bdf8' : breed.primaryColorHex}`,
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      position: 'relative'
                     }}>
                       <img
-                        src={generateCatSpriteSheet(breed.id).idleDown.toDataURL()}
+                        src={`/assets/character/${breed.id}/CharacterPortraits/front.png`}
                         alt={breed.name}
-                        style={{ width: '36px', height: '36px', imageRendering: 'pixelated' }}
+                        onError={(e) => {
+                          // Fallback to canvas dataURL if needed
+                          e.currentTarget.src = generateCatSpriteSheet(breed.id).idleDown.toDataURL();
+                        }}
+                        style={{ width: '46px', height: '46px', imageRendering: 'pixelated', objectFit: 'contain' }}
                       />
                     </div>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '13px', fontFamily: 'var(--font-heading)', color: '#f8fafc' }}>
                         {breed.name.toUpperCase()}
                       </div>
                       <div style={{ fontSize: '11px', color: '#38bdf8', fontFamily: 'var(--font-heading)' }}>
                         {breed.title.toUpperCase()}
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <img
+                          src={`/assets/character/${breed.id}/CharacterPortraits/side.png`}
+                          alt={`${breed.name} profile`}
+                          title="Side Profile"
+                          style={{ width: '22px', height: '22px', imageRendering: 'pixelated' }}
+                        />
+                        <img
+                          src={`/assets/character/${breed.id}/CharacterPortraits/icon.png`}
+                          alt={`${breed.name} icon`}
+                          title="Badge Icon"
+                          style={{ width: '22px', height: '22px', imageRendering: 'pixelated' }}
+                        />
                       </div>
                     </div>
                   </div>

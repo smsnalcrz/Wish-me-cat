@@ -53,7 +53,14 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         <div className="welcome-header">
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
             <PixelStardustIcon size={24} />
-            <PixelCatIcon size={24} />
+            <img
+              src={`/assets/character/${saveData.catBreed || 'celestial'}/CharacterPortraits/front.png`}
+              alt="Wish Me Cat"
+              style={{ width: '48px', height: '48px', imageRendering: 'pixelated', objectFit: 'contain' }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
             <PixelStardustIcon size={24} />
           </div>
           <h1 className="welcome-title">WISH ME CAT</h1>

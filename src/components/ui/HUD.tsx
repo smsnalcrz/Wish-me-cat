@@ -85,7 +85,14 @@ export const HUD: React.FC<HUDProps> = ({
 
           <div className="quick-buttons pointer-events-auto">
             <button className="icon-button" onClick={onOpenWardrobe} title="Cat Wardrobe (Change Breed)">
-              <PixelCatIcon size={20} />
+              <img
+                src={`/assets/character/${saveData.catBreed || 'celestial'}/CharacterPortraits/icon.png`}
+                alt="Cat Wardrobe"
+                style={{ width: '22px', height: '22px', imageRendering: 'pixelated', objectFit: 'contain' }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             </button>
             <button className="icon-button" onClick={onOpenShop} title="Cosmic Gear Emporium">
               <PixelShopIcon size={20} />
