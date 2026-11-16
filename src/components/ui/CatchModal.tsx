@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { CatchResult } from '../../types/game';
+import { generateCreatureSprite } from '../../game2d/rendering/PixelSprites';
 import { Sparkles, Award } from 'lucide-react';
 
 interface CatchModalProps {
@@ -10,6 +11,11 @@ interface CatchModalProps {
 
 export const CatchModal: React.FC<CatchModalProps> = ({ result, onClose }) => {
   const { creature, variant, weight, stardust, exp, isNewDiscovery, isNewRecord } = result;
+
+  const spriteDataUrl = useMemo(() => {
+    const canvas = generateCreatureSprite(creature.modelType, creature.rarity, variant);
+    return canvas.toDataURL();
+  }, [creature, variant]);
 
   useEffect(() => {
     // Launch celebratory confetti fireworks
@@ -24,21 +30,33 @@ export const CatchModal: React.FC<CatchModalProps> = ({ result, onClose }) => {
 
   return (
     <div className="modal-backdrop">
-      <div className="cosmic-panel modal-card" style={{ maxWidth: '520px', textAlign: 'center' }}>
+      <div className="cosmic-panel modal-card pixel-panel" style={{ maxWidth: '520px', textAlign: 'center' }}>
         <div style={{ color: '#fbbf24', fontSize: '15px', fontWeight: 700, letterSpacing: '1px' }}>
           ★ CELESTIAL CATCH SUCCESSFUL! ★
         </div>
 
         <div className="catch-showcase">
-          {/* Glowing Star Aura Orb */}
+          {/* Glowing 2D Pixel Creature Showcase */}
           <div
             className="creature-glow-orb"
             style={{
               color: creature.glowColor,
-              background: `radial-gradient(circle, ${creature.glowColor} 0%, ${creature.secondaryColor} 60%, transparent 80%)`
+              background: `radial-gradient(circle, ${creature.glowColor} 0%, ${creature.secondaryColor} 60%, transparent 80%)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            <Sparkles size={54} color="#ffffff" style={{ filter: 'drop-shadow(0 0 10px #ffffff)' }} />
+            <img
+              src={spriteDataUrl}
+              alt={creature.name}
+              style={{
+                width: '88px',
+                height: '88px',
+                imageRendering: 'pixelated',
+                filter: `drop-shadow(0 0 12px ${creature.glowColor})`
+              }}
+            />
           </div>
 
           <div style={{ fontSize: '30px', fontWeight: 700, color: '#fff' }}>

@@ -85,17 +85,6 @@ export const HUD: React.FC<HUDProps> = ({
           </div>
 
           <div className="quick-buttons pointer-events-auto">
-            {/* Roblox Style Shift Lock Toggle */}
-            <button
-              className={`icon-button shift-lock-btn ${isShiftLock ? 'shift-lock-active' : ''}`}
-              onClick={() => window.dispatchEvent(new CustomEvent('toggle-shift-lock'))}
-              title={isShiftLock ? "Shift Lock ON (Press Shift or Esc to unlock)" : "Toggle Shift Lock (Press Shift to lock)"}
-              style={{ position: 'relative' }}
-            >
-              {isShiftLock ? <Lock size={18} color="#facc15" /> : <Unlock size={18} />}
-              <span className="shift-key-hint">Shift</span>
-            </button>
-
             <button className="icon-button" onClick={onOpenWardrobe} title="Cat Wardrobe (Change Cat Model)" style={{ position: 'relative' }}>
               <span style={{ fontSize: '18px', lineHeight: 1 }}>🐱</span>
             </button>

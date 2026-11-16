@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GameViewport } from './components/game/GameViewport';
+import { GameViewport2D } from './components/game/GameViewport2D';
 import { HUD } from './components/ui/HUD';
 import { MinigameOverlay } from './components/ui/MinigameOverlay';
 import { CatchModal } from './components/ui/CatchModal';
@@ -15,8 +15,8 @@ import { PauseModal } from './components/menus/PauseModal';
 import { CatWardrobeModal } from './components/menus/CatWardrobeModal';
 import { SaveManager, DEFAULT_SAVE } from './systems/save/SaveManager';
 import { AudioManager } from './systems/audio/AudioManager';
-import { FishingSystem, MinigameState } from './systems/fishing/FishingSystem';
-import { PlayerController } from './systems/player/PlayerController';
+import { FishingSystem2D, MinigameState2D } from './game2d/fishing/FishingSystem2D';
+import { GameEngine2D } from './game2d/core/GameEngine2D';
 import { detectDevice, DeviceInfo } from './utils/deviceDetection';
 import { GameState, CatchResult, SaveData, RegionData, CatBreed } from './types/game';
 import './styles/game.css';
@@ -25,7 +25,7 @@ export const App: React.FC = () => {
   const [saveData, setSaveData] = useState<SaveData>(DEFAULT_SAVE);
   const [gameState, setGameState] = useState<GameState>('exploring');
   const [interactionPrompt, setInteractionPrompt] = useState<string | null>(null);
-  const [minigameState, setMinigameState] = useState<MinigameState | null>(null);
+  const [minigameState, setMinigameState] = useState<MinigameState2D | null>(null);
   const [catchResult, setCatchResult] = useState<CatchResult | null>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [toast, setToast] = useState<{ title: string; message: string } | null>(null);
@@ -33,8 +33,8 @@ export const App: React.FC = () => {
   const [hasEnteredGame, setHasEnteredGame] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(detectDevice);
 
-  const fishingSystemRef = useRef<FishingSystem | null>(null);
-  const playerControllerRef = useRef<PlayerController | null>(null);
+  const fishingSystemRef = useRef<FishingSystem2D | null>(null);
+  const gameEngineRef = useRef<GameEngine2D | null>(null);
   const audio = AudioManager.getInstance();
 
   useEffect(() => {
@@ -117,6 +117,10 @@ export const App: React.FC = () => {
   };
 
   const handlePromptAction = () => {
+    if (gameEngineRef.current?.currentPromptStation) {
+      gameEngineRef.current.triggerCurrentInteraction();
+      return;
+    }
     if (!interactionPrompt || !fishingSystemRef.current) return;
     if (interactionPrompt.includes('Fish')) {
       fishingSystemRef.current.startFishing();
@@ -153,8 +157,8 @@ export const App: React.FC = () => {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      {/* 3D Game Viewport */}
-      <GameViewport
+      {/* Pure 2D Pixel-Art Game Viewport */}
+      <GameViewport2D
         gameState={gameState}
         onStateChange={setGameState}
         onPromptChange={setInteractionPrompt}
@@ -162,7 +166,7 @@ export const App: React.FC = () => {
         onCatchSuccess={setCatchResult}
         onNotification={showToast}
         registerFishingSystem={(fs) => { fishingSystemRef.current = fs; }}
-        registerPlayerController={(pc) => { playerControllerRef.current = pc; }}
+        registerEngine={(eng) => { gameEngineRef.current = eng; }}
         currentRegionId={saveData.currentRegionId}
         catBreed={saveData.catBreed || 'celestial'}
         rodLevel={saveData.rodLevel}
@@ -193,7 +197,7 @@ export const App: React.FC = () => {
         onInteract={handlePromptAction}
         onMinigameAction={handleMinigameAction}
         onMoveVector={(vector, isRunning) => {
-          playerControllerRef.current?.setVirtualJoystick(vector, isRunning);
+          gameEngineRef.current?.input.setVirtualJoystick(vector, isRunning);
         }}
         isVisible={hasEnteredGame && (deviceInfo.isTouch || deviceInfo.isMobile)}
       />

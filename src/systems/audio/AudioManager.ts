@@ -248,4 +248,16 @@ export class AudioManager {
       osc.stop(now + idx * 0.06 + 0.8);
     });
   }
+
+  public playReelTick(): void {
+    this.playMinigameHit(false);
+  }
+
+  public playLineSnap(): void {
+    this.playMinigameMiss();
+  }
+
+  public playCatchFanfare(rarity: string): void {
+    this.playCatchCelebration(rarity);
+  }
 }

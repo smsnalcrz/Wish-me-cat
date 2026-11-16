@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SaveData, CatBreed } from '../../types/game';
 import { CAT_BREEDS, CatBreedData } from '../../data/catBreeds';
+import { generateCatSpriteSheet } from '../../game2d/rendering/PixelSprites';
 import { SaveManager } from '../../systems/save/SaveManager';
 import { AudioManager } from '../../systems/audio/AudioManager';
 import { X, Check, Sparkles, Heart } from 'lucide-react';
@@ -107,13 +108,32 @@ export const CatWardrobeModal: React.FC<CatWardrobeModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Breed Name & Title */}
-                  <div style={{ marginTop: '10px' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc', letterSpacing: '0.3px' }}>
-                      {breed.name}
+                  {/* Breed Name & Title with 2D Pixel Sprite Preview */}
+                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      background: 'rgba(0,0,0,0.4)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: `1px solid ${breed.primaryColorHex}`,
+                      boxShadow: `0 0 10px ${breed.primaryColorHex}44`
+                    }}>
+                      <img
+                        src={generateCatSpriteSheet(breed.id).idleDown.toDataURL()}
+                        alt={breed.name}
+                        style={{ width: '38px', height: '38px', imageRendering: 'pixelated' }}
+                      />
                     </div>
-                    <div style={{ fontSize: '13px', color: '#38bdf8', fontWeight: 600 }}>
-                      {breed.title}
+                    <div>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc', letterSpacing: '0.3px' }}>
+                        {breed.name}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#38bdf8', fontWeight: 600 }}>
+                        {breed.title}
+                      </div>
                     </div>
                   </div>
 

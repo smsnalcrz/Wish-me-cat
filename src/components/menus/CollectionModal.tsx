@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SaveData, CelestialCreature } from '../../types/game';
 import { CREATURES } from '../../data/creatures';
+import { generateCreatureSprite } from '../../game2d/rendering/PixelSprites';
 import { AudioManager } from '../../systems/audio/AudioManager';
 import { X, Sparkles, HelpCircle } from 'lucide-react';
 
@@ -61,15 +62,24 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ saveData, onCl
                     style={{
                       width: '42px',
                       height: '42px',
-                      borderRadius: '50%',
-                      background: discovered ? creature.glowColor : '#1e1b4b',
+                      borderRadius: '8px',
+                      background: discovered ? 'rgba(0,0,0,0.5)' : '#1e1b4b',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: discovered ? `0 0 12px ${creature.glowColor}` : 'none'
+                      boxShadow: discovered ? `0 0 10px ${creature.glowColor}` : 'none',
+                      border: discovered ? `1px solid ${creature.glowColor}` : '1px solid rgba(255,255,255,0.08)'
                     }}
                   >
-                    {discovered ? <Sparkles size={22} color="#000" /> : <HelpCircle size={22} color="#475569" />}
+                    {discovered ? (
+                      <img
+                        src={generateCreatureSprite(creature.modelType, creature.rarity).toDataURL()}
+                        alt={creature.name}
+                        style={{ width: '32px', height: '32px', imageRendering: 'pixelated' }}
+                      />
+                    ) : (
+                      <HelpCircle size={22} color="#475569" />
+                    )}
                   </div>
 
                   <div>
@@ -89,6 +99,14 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ saveData, onCl
           <div style={{ background: 'rgba(0,0,0,0.35)', padding: '20px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {isSelectedDiscovered ? (
               <>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
+                  <img
+                    src={generateCreatureSprite(selectedCreature.modelType, selectedCreature.rarity).toDataURL()}
+                    alt={selectedCreature.name}
+                    style={{ width: '72px', height: '72px', imageRendering: 'pixelated', filter: `drop-shadow(0 0 10px ${selectedCreature.glowColor})` }}
+                  />
+                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontSize: '24px', fontWeight: 700, color: selectedCreature.glowColor }}>
                     {selectedCreature.name}

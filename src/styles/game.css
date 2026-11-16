@@ -30,7 +30,21 @@ body, html, #root {
   color: var(--color-text-main);
 }
 
-/* 3D Canvas container */
+/* 2D Pixel-Art Canvas Container */
+.game-viewport-2d {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  background-color: #070514;
+}
+
+/* 3D Canvas container (legacy compatibility) */
 .game-viewport {
   position: absolute;
   top: 0;
