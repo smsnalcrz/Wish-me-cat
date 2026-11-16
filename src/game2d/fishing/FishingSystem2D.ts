@@ -83,9 +83,29 @@ export class FishingSystem2D {
 
     this.activePier = pier || null;
 
-    // Face toward Starpond
-    if (pier && pier.castTarget) {
-      this.cat.facePoint(pier.castTarget.x, pier.castTarget.y);
+    // Position and align cat cleanly on pier walkway facing out towards the water
+    if (pier) {
+      if (pier.pierDirection === 'up') {
+        this.cat.x = pier.x;
+        this.cat.y = pier.y - 12;
+        this.cat.facing = 'up';
+      } else if (pier.pierDirection === 'down') {
+        this.cat.x = pier.x;
+        this.cat.y = pier.y + 12;
+        this.cat.facing = 'down';
+      } else if (pier.pierDirection === 'left') {
+        this.cat.x = pier.x - 12;
+        this.cat.y = pier.y;
+        this.cat.facing = 'left';
+      } else if (pier.pierDirection === 'right') {
+        this.cat.x = pier.x + 12;
+        this.cat.y = pier.y;
+        this.cat.facing = 'right';
+      }
+
+      if (pier.castTarget) {
+        this.cat.facePoint(pier.castTarget.x, pier.castTarget.y);
+      }
     } else {
       this.cat.facePoint(this.water.centerX, this.water.centerY);
     }

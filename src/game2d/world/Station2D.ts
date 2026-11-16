@@ -158,6 +158,49 @@ export class StationManager2D {
     return nearest;
   }
 
+  // Render wooden pier decks and stilts in ground layer (under entities)
+  public renderPierDecks(ctx: CanvasRenderingContext2D, camera: Camera2D): void {
+    const scale = camera.zoom;
+    for (const station of this.stations) {
+      if (station.type !== 'pier') continue;
+
+      const screen = camera.worldToScreen(station.x, station.y);
+      const isVertical = station.pierDirection === 'up' || station.pierDirection === 'down';
+      const pw = isVertical ? 28 * scale : 44 * scale;
+      const ph = isVertical ? 44 * scale : 28 * scale;
+
+      // Pier Stilt Water Shadows
+      ctx.fillStyle = 'rgba(5, 3, 15, 0.6)';
+      ctx.fillRect(screen.x - pw / 2 + 2 * scale, screen.y - ph / 2 + 4 * scale, pw, ph);
+
+      // Main Plank Deck
+      ctx.fillStyle = '#6b4423';
+      ctx.fillRect(screen.x - pw / 2, screen.y - ph / 2, pw, ph);
+
+      // Individual Planks with woodgrain lines
+      ctx.fillStyle = '#3d251e';
+      if (isVertical) {
+        for (let p = -18; p <= 18; p += 6) {
+          ctx.fillRect(screen.x - pw / 2, screen.y + p * scale, pw, 1.5 * scale);
+          // Nail heads
+          ctx.fillStyle = '#1c1917';
+          ctx.fillRect(screen.x - pw / 2 + 3 * scale, screen.y + p * scale - 2 * scale, 1.5 * scale, 1.5 * scale);
+          ctx.fillRect(screen.x + pw / 2 - 4 * scale, screen.y + p * scale - 2 * scale, 1.5 * scale, 1.5 * scale);
+          ctx.fillStyle = '#3d251e';
+        }
+      } else {
+        for (let p = -18; p <= 18; p += 6) {
+          ctx.fillRect(screen.x + p * scale, screen.y - ph / 2, 1.5 * scale, ph);
+          // Nail heads
+          ctx.fillStyle = '#1c1917';
+          ctx.fillRect(screen.x + p * scale - 2 * scale, screen.y - ph / 2 + 3 * scale, 1.5 * scale, 1.5 * scale);
+          ctx.fillRect(screen.x + p * scale - 2 * scale, screen.y + ph / 2 - 4 * scale, 1.5 * scale, 1.5 * scale);
+          ctx.fillStyle = '#3d251e';
+        }
+      }
+    }
+  }
+
   // Render individual station graphic
   public renderStation(ctx: CanvasRenderingContext2D, camera: Camera2D, station: InteractiveStation2D, isHovered: boolean, time: number): void {
     const screen = camera.worldToScreen(station.x, station.y);
@@ -167,44 +210,13 @@ export class StationManager2D {
 
     switch (station.type) {
       case 'pier': {
-        // Handcrafted Wooden Pier Planks
         const isVertical = station.pierDirection === 'up' || station.pierDirection === 'down';
-        const pw = isVertical ? 26 * scale : 42 * scale;
-        const ph = isVertical ? 42 * scale : 26 * scale;
+        const pw = isVertical ? 28 * scale : 44 * scale;
+        const ph = isVertical ? 44 * scale : 28 * scale;
 
-        // Pier Stilt Water Shadows
-        ctx.fillStyle = 'rgba(5, 3, 15, 0.6)';
-        ctx.fillRect(screen.x - pw / 2 + 2 * scale, screen.y - ph / 2 + 4 * scale, pw, ph);
-
-        // Main Plank Deck
-        ctx.fillStyle = '#6b4423';
-        ctx.fillRect(screen.x - pw / 2, screen.y - ph / 2, pw, ph);
-
-        // Individual Planks with woodgrain lines
-        ctx.fillStyle = '#3d251e';
-        if (isVertical) {
-          for (let p = -18; p <= 18; p += 6) {
-            ctx.fillRect(screen.x - pw / 2, screen.y + p * scale, pw, 1.5 * scale);
-            // Nail heads
-            ctx.fillStyle = '#1c1917';
-            ctx.fillRect(screen.x - pw / 2 + 3 * scale, screen.y + p * scale - 2 * scale, 1.5 * scale, 1.5 * scale);
-            ctx.fillRect(screen.x + pw / 2 - 4 * scale, screen.y + p * scale - 2 * scale, 1.5 * scale, 1.5 * scale);
-            ctx.fillStyle = '#3d251e';
-          }
-        } else {
-          for (let p = -18; p <= 18; p += 6) {
-            ctx.fillRect(screen.x + p * scale, screen.y - ph / 2, 1.5 * scale, ph);
-            // Nail heads
-            ctx.fillStyle = '#1c1917';
-            ctx.fillRect(screen.x + p * scale - 2 * scale, screen.y - ph / 2 + 3 * scale, 1.5 * scale, 1.5 * scale);
-            ctx.fillRect(screen.x + p * scale - 2 * scale, screen.y - ph / 2 - 4 * scale, 1.5 * scale, 1.5 * scale);
-            ctx.fillStyle = '#3d251e';
-          }
-        }
-
-        // Mooring Post with Brass Lantern at pier edge
-        const lanternScreenX = isVertical ? screen.x : (station.pierDirection === 'left' ? screen.x - pw / 2 + 4 * scale : screen.x + pw / 2 - 4 * scale);
-        const lanternScreenY = isVertical ? (station.pierDirection === 'up' ? screen.y - ph / 2 + 4 * scale : screen.y + ph / 2 - 4 * scale) : screen.y;
+        // Mooring Post with Brass Lantern placed at railing corner to never block the cat
+        const lanternScreenX = isVertical ? screen.x + pw / 2 - 4 * scale : (station.pierDirection === 'left' ? screen.x - pw / 2 + 4 * scale : screen.x + pw / 2 - 4 * scale);
+        const lanternScreenY = isVertical ? (station.pierDirection === 'up' ? screen.y - ph / 2 + 4 * scale : screen.y + ph / 2 - 4 * scale) : screen.y - ph / 2 + 4 * scale;
 
         // Post
         ctx.fillStyle = '#2d1810';

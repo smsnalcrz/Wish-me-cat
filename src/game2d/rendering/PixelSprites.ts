@@ -96,220 +96,502 @@ export function getCatBreedColors(breed: CatBreed = 'celestial'): Record<string,
   switch (breed) {
     case 'calico':
       return {
-        O: '#1a1829', // Outline
-        F: '#fcfaf7', // Fur primary (warm white)
-        S: '#f97316', // Calico ginger spots
-        K: '#2b273b', // Calico dark spots
-        E: '#f59e0b', // Eyes (amber)
-        P: '#f472b6', // Nose/paws (pink)
+        O: '#1c1917', // Outline
+        F: '#fef3c7', // Fur primary (warm ivory)
+        S: '#ea580c', // Calico ginger spots
+        K: '#292524', // Calico dark chocolate spots
+        E: '#10b981', // Eyes (emerald jade)
+        P: '#f472b6', // Inner ear / nose pink
         C: '#ef4444', // Collar (crimson)
         B: '#fbbf24', // Bell/charm (gold suzu)
-        H: '#ffffff', // Eye highlight
-        D: '#e4dfd8', // Fur shadow
+        H: '#ffffff', // Eye specular highlight
+        D: '#78350f', // Fur shadow / tail accent
+        W: '#ffffff', // Whiskers
       };
     case 'kuro':
       return {
-        O: '#0a0914', // Outline
-        F: '#1f1d2e', // Fur primary (midnight void black)
-        S: '#2e2b42', // Fur highlight
-        K: '#151322', // Fur deep shadow
-        E: '#10b981', // Eyes (glowing emerald)
-        P: '#f472b6', // Nose/paws
-        C: '#a855f7', // Collar (violet)
-        B: '#e2e8f0', // Bell/charm (silver moon)
-        H: '#ffffff', // Eye highlight
-        D: '#12101c', // Fur shadow
+        O: '#09090b', // Outline
+        F: '#27272a', // Fur primary (silky midnight black)
+        S: '#3f3f46', // Fur highlight
+        K: '#18181b', // Fur deep shadow
+        E: '#facc15', // Eyes (mystical topaz gold)
+        P: '#fb7185', // Rose inner ears & nose
+        C: '#9333ea', // Collar (violet)
+        B: '#f43f5e', // Ruby moon pendant charm
+        H: '#ffffff', // Eye specular highlight
+        D: '#0f0f12', // Fur shadow
+        W: '#ffffff', // Whiskers
       };
     case 'cloud':
       return {
-        O: '#1e1c38', // Outline
-        F: '#fef3c7', // Fur primary (fluffy cloud cream)
-        S: '#ffffff', // Fur highlight
-        K: '#fde68a', // Fur soft gold shading
-        E: '#38bdf8', // Eyes (celestial sapphire)
-        P: '#fb7185', // Nose/paws
-        C: '#f43f5e', // Collar (rose pink)
-        B: '#fbbf24', // Bell/charm (gold)
-        H: '#ffffff', // Eye highlight
-        D: '#f3e8c8', // Fur shadow
+        O: '#334155', // Outline
+        F: '#f8fafc', // Fur primary (fluffy pure cloud white)
+        S: '#ffffff', // Fur bright white highlight
+        K: '#cbd5e1', // Fur soft silver shading
+        E: '#c084fc', // Eyes (amethyst lavender)
+        P: '#f472b6', // Pink inner ears & nose
+        C: '#a855f7', // Collar (royal purple ribbon)
+        B: '#38bdf8', // Bell/charm (sapphire star bell)
+        H: '#ffffff', // Eye specular highlight
+        D: '#94a3b8', // Fur shadow
+        W: '#ffffff', // Whiskers
       };
     case 'celestial':
     default:
       return {
-        O: '#161331', // Outline
-        F: '#9d8ec9', // Fur primary (cosmic lilac)
-        S: '#c5b8e8', // Fur highlight (soft lavender)
-        K: '#7b6ca8', // Fur deep shading
+        O: '#130f2c', // Outline
+        F: '#5b3e9b', // Fur primary (vibrant celestial purple)
+        S: '#8262c9', // Fur highlight (soft lilac)
+        K: '#382465', // Fur deep shading
         E: '#38bdf8', // Eyes (luminous cyan starlight)
-        P: '#f472b6', // Nose/paws (twilight pink)
+        P: '#f472b6', // Nose & inner ear pink
         C: '#f59e0b', // Collar (celestial gold)
-        B: '#fde047', // Bell/charm (sparkling star)
-        H: '#ffffff', // Eye highlight
-        D: '#675892', // Fur shadow
+        B: '#fef08a', // Bell/charm (sparkling star)
+        H: '#ffffff', // Eye specular highlight
+        D: '#2a174d', // Fur shadow
+        W: '#ffffff', // Whiskers
       };
   }
 }
 
-// 24x24 Pixel Art Cat Matrix Templates
+// 24x24 Handcrafted Pixel-Art Cat Matrix Templates (Clear Pointed Ears, Big Expressive Anime Eyes, Whiskers, Paws, Curled Tail)
 const CAT_MATRICES = {
-  // Facing Down (towards camera)
   idleDown1: [
-    "........OOOOOO..........",
-    ".......OFFFFFFO.........",
-    "......OFFFFFFFFO........",
-    ".....OFFOOFFOOFFO.......",
-    "....OFEHOFFEOHFFO.......",
-    "....OFEEOFFEEOFFO.......",
-    "...OFFFFFFPFFFFFFO......",
-    "...OFFFFFFOFFFFFFO......",
-    "...OFFFOOOOOOFFFO.......",
-    "....OFFCCCCCCFFO........",
-    ".....OFFFBBFFFO.........",
-    "....OFFFFFFFFFO.........",
-    "...OFFFFFFFFFFFFO.......",
-    "..OFFFFFFFFFFFFFFO......",
-    "..OFFFFFFFFFFFFFFO......",
-    "..OFFFOOFFFFOOFFFO......",
-    "..OFFFO.OFFO.OFFFO......",
-    "...OOO...OO...OOO.......",
-    "........................",
-    "........................"
+    '........................',
+    '.....OO..........OO.....',
+    '....OFPO........OPFO....',
+    '...OFFPPO......OPPFFO...',
+    '...OFFPPFO.OO.OFPPFFO...',
+    '..OFFFFFFFOFFOFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFSFFFFFFFFFFSFFFO..',
+    '..OFFOHEOFFFFFFOHEOFFO..',
+    '..OFFOEEOFFPPFFOEEOFFO..',
+    '.WOOFFFFFFFFFFFFFFFFOOW.',
+    '..OFFFFFFFOOOOFFFFFFFO..',
+    '...OFFFCCCCCCCCCCFFFO...',
+    '....OCCCCBBBBCCCCO......',
+    '.....OFFFBBBBFFFO...OO..',
+    '....OFFFFFFFFFFFFO.OFFO.',
+    '...OFFFFFFFFFFFFFFOFFFO.',
+    '...OFFFOOFFFFFFOFFOFFFO.',
+    '...OFFFO.OFFFFO.OFOFFO..',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '....OOO...OOOO...OOO....',
+    '........................',
+    '........................'
   ],
+
   idleDown2: [
-    "........OOOOOO..........",
-    ".......OFFFFFFO.........",
-    "......OFFFFFFFFO........",
-    ".....OFFOOFFOOFFO.......",
-    "....OFEHOFFEOHFFO.......",
-    "....OFEEOFFEEOFFO.......",
-    "...OFFFFFFPFFFFFFO......",
-    "...OFFFFFFOFFFFFFO......",
-    "...OFFFOOOOOOFFFO.......",
-    "....OFFCCCCCCFFO........",
-    ".....OFFFBBFFFO.........",
-    "....OFFFFFFFFFO.........",
-    "...OFFFFFFFFFFFFO.......",
-    "..OFFFFFFFFFFFFFFO......",
-    "..OFFFFFFFFFFFFFFO......",
-    "..OFFFOOFFFFOOFFFO......",
-    "..OFFFO.OFFO.OFFFO......",
-    "...OOO...OO...OOO.......",
-    "........................",
-    "........................"
+    '........................',
+    '.....OO..........OO.....',
+    '....OFPO........OPFO....',
+    '...OFFPPO......OPPFFO...',
+    '...OFFPPFO.OO.OFPPFFO...',
+    '..OFFFFFFFOFFOFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFSFFFFFFFFFFSFFFO..',
+    '..OFFOHEOFFFFFFOHEOFFO..',
+    '..OFFOEEOFFPPFFOEEOFFO..',
+    '.WOOFFFFFFFFFFFFFFFFOOW.',
+    '..OFFFFFFFOOOOFFFFFFFO..',
+    '...OFFFCCCCCCCCCCFFFO...',
+    '....OCCCCBBBBCCCCO..OO..',
+    '.....OFFFBBBBFFFO..OFFO.',
+    '....OFFFFFFFFFFFFO.OFFO.',
+    '...OFFFFFFFFFFFFFFOFFFO.',
+    '...OFFFOOFFFFFFOFFOFFFO.',
+    '...OFFFO.OFFFFO.OFOFFO..',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '....OOO...OOOO...OOO....',
+    '........................',
+    '........................'
   ],
 
-  // Facing Up (back to camera)
+  walkDown1: [
+    '........................',
+    '.....OO..........OO.....',
+    '....OFPO........OPFO....',
+    '...OFFPPO......OPPFFO...',
+    '...OFFPPFO.OO.OFPPFFO...',
+    '..OFFFFFFFOFFOFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFSFFFFFFFFFFSFFFO..',
+    '..OFFOHEOFFFFFFOHEOFFO..',
+    '..OFFOEEOFFPPFFOEEOFFO..',
+    '.WOOFFFFFFFFFFFFFFFFOOW.',
+    '..OFFFFFFFOOOOFFFFFFFO..',
+    '...OFFFCCCCCCCCCCFFFO...',
+    '....OCCCCBBBBCCCCO......',
+    '.....OFFFBBBBFFFO...OO..',
+    '....OFFFFFFFFFFFFO.OFFO.',
+    '...OFFFFFFFFFFFFFFOFFFO.',
+    '...OFFFOOFFFFFFOFFOFFFO.',
+    '...OFFHO.OFFFFO.OFOFFO..',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '....OOO..OFFHO...OOO....',
+    '..........OOO...........',
+    '........................',
+    '........................'
+  ],
+
+  walkDown2: [
+    '........................',
+    '.....OO..........OO.....',
+    '....OFPO........OPFO....',
+    '...OFFPPO......OPPFFO...',
+    '...OFFPPFO.OO.OFPPFFO...',
+    '..OFFFFFFFOFFOFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFSFFFFFFFFFFSFFFO..',
+    '..OFFOHEOFFFFFFOHEOFFO..',
+    '..OFFOEEOFFPPFFOEEOFFO..',
+    '.WOOFFFFFFFFFFFFFFFFOOW.',
+    '..OFFFFFFFOOOOFFFFFFFO..',
+    '...OFFFCCCCCCCCCCFFFO...',
+    '....OCCCCBBBBCCCCO..OO..',
+    '.....OFFFBBBBFFFO..OFFO.',
+    '....OFFFFFFFFFFFFO.OFFO.',
+    '...OFFFFFFFFFFFFFFOFFFO.',
+    '...OFFFOOFFFFFFOFFOFFFO.',
+    '...OFFFO.OFFFFO.OFOFFO..',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '...OFFHO..OFFHO..OOO....',
+    '....OOO...OOOO..........',
+    '........................',
+    '........................'
+  ],
+
   idleUp: [
-    "........OOOOOO..........",
-    ".......OFFFFFFO.........",
-    "......OFFFFFFFFO........",
-    ".....OFFFFFFFFFFO.......",
-    "....OFFFFFFFFFFFFO......",
-    "....OFFFFFFFFFFFFO......",
-    "...OFFFFFFFFFFFFFFO.....",
-    "...OFFFFFFFFFFFFFFO.....",
-    "...OFFFOOOOOOFFFO.......",
-    "....OFFCCCCCCFFO........",
-    "....OFFFFFFFFFO.........",
-    "...OFFFFFFFFFFFFO.......",
-    "..OFFFFFFFFFFFFFFO......",
-    "..OFFFFFFFFFFFFFFO......",
-    "..OFFFOOFFFFOOFFFO......",
-    "..OFFFO.OFFO.OFFFO......",
-    "...OOO...OO...OOO.......",
-    "......OOO...............",
-    ".....OFFFO..............",
-    "......OOO..............."
+    '........................',
+    '.....OO..........OO.....',
+    '....OFFO........OFFO....',
+    '...OFFFFO......OFFFFO...',
+    '...OFFFFFO.OO.OFFFFFO...',
+    '..OFFFFFFFOFFOFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '...OFFFFFFFFFFFFFFFFO...',
+    '...OFFFCCCCCCCCCCFFFO...',
+    '....OFFFFFFFFFFFFO......',
+    '....OFFFFFFFFFFFFO..OO..',
+    '...OFFFFFFFFFFFFFFO.OFFO',
+    '...OFFFFFFFFFFFFFFFOFFFO',
+    '...OFFFFFFFFFFFFFFFOFFFO',
+    '...OFFFOOFFFFFFOFFFOFO..',
+    '...OFFFO.OFFFFO.OFFHO...',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '....OOO...OOOO...OOO....',
+    '........................',
+    '........................',
+    '........................'
   ],
 
-  // Facing Side (Right - flip horizontally for Left)
+  walkUp1: [
+    '........................',
+    '.....OO..........OO.....',
+    '....OFFO........OFFO....',
+    '...OFFFFO......OFFFFO...',
+    '...OFFFFFO.OO.OFFFFFO...',
+    '..OFFFFFFFOFFOFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '...OFFFFFFFFFFFFFFFFO...',
+    '...OFFFCCCCCCCCCCFFFO...',
+    '....OFFFFFFFFFFFFO......',
+    '....OFFFFFFFFFFFFO..OO..',
+    '...OFFFFFFFFFFFFFFO.OFFO',
+    '...OFFFFFFFFFFFFFFFOFFFO',
+    '...OFFFFFFFFFFFFFFFOFFFO',
+    '...OFFFOOFFFFFFOFFFOFO..',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '...OFFHO..OFFHO..OOO....',
+    '....OOO...OOOO..........',
+    '........................',
+    '........................',
+    '........................'
+  ],
+
+  walkUp2: [
+    '........................',
+    '.....OO..........OO.....',
+    '....OFFO........OFFO....',
+    '...OFFFFO......OFFFFO...',
+    '...OFFFFFO.OO.OFFFFFO...',
+    '..OFFFFFFFOFFOFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '...OFFFFFFFFFFFFFFFFO...',
+    '...OFFFCCCCCCCCCCFFFO...',
+    '....OFFFFFFFFFFFFO......',
+    '....OFFFFFFFFFFFFO..OO..',
+    '...OFFFFFFFFFFFFFFO.OFFO',
+    '...OFFFFFFFFFFFFFFFOFFFO',
+    '...OFFFFFFFFFFFFFFFOFFFO',
+    '...OFFFOOFFFFFFOFFFOFO..',
+    '...OFFHO.OFFFFO.OFFHO...',
+    '....OOO..OFFHO...OOO....',
+    '..........OOO...........',
+    '........................',
+    '........................',
+    '........................'
+  ],
+
   idleSide: [
-    "..........OOOOOO........",
-    ".........OFFFFFFO.......",
-    "........OFFFFFFFFO......",
-    ".......OFFOOFFOFFO......",
-    "......OFFEHOFFFFFO......",
-    "......OFFEEOFFFFPO......",
-    ".....OFFFFFFFFFFFFO.....",
-    "....OFFFOOOOOOFFFO......",
-    "....OFFCCCCCCFFO........",
-    "...OFFFFFFFBFFFO........",
-    "..OFFFFFFFFFFFFO........",
-    ".OFFFFFFFFFFFFFFO.......",
-    ".OFFFFFFFFFFFFFFO.......",
-    ".OFFFOOFFFOOFFFO........",
-    "..OOO..OOO..OOO.........",
-    "........................",
-    ".....OOOO...............",
-    "....OFFFFO..............",
-    ".....OOOO..............."
+    '........................',
+    '..............OO........',
+    '.............OFPO..OO...',
+    '............OFFPPO.OFFO.',
+    '............OFFPPFOOFFFF',
+    '..OO.......OFFFFFFFFFFFF',
+    '.OFFO......OFFFFFFFFFFFF',
+    '.OFFO.....OFFFFFFFFOHEFF',
+    '..OFO.....OFFFFFFFFOEEPO',
+    '..OFO.....OFFFFFFFFOFOOW',
+    '...OOOOOO.OFFFFFFFFFOOOW',
+    '..OFFFFFFOFFFCCCCFFFO...',
+    '.OFFFFFFFFFFCCCBBFFFO...',
+    '.OFFFFFFFFFFFFFBBFFFO...',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFOOFFFFFFOFFFOFFO..',
+    '..OFFFO.OFFFFO.OFFFOFFO.',
+    '..OFFFO.OFFFFO.OFFFOFO..',
+    '..OFFHO.OFFFFO.OFFHO....',
+    '...OOO...OOOO...OOO.....',
+    '........................',
+    '........................'
   ],
 
-  // Fishing Cast & Wait
+  walkSide1: [
+    '........................',
+    '..............OO........',
+    '.............OFPO..OO...',
+    '............OFFPPO.OFFO.',
+    '............OFFPPFOOFFFF',
+    '..OO.......OFFFFFFFFFFFF',
+    '.OFFO......OFFFFFFFFFFFF',
+    '.OFFO.....OFFFFFFFFOHEFF',
+    '..OFO.....OFFFFFFFFOEEPO',
+    '..OFO.....OFFFFFFFFOFOOW',
+    '...OOOOOO.OFFFFFFFFFOOOW',
+    '..OFFFFFFOFFFCCCCFFFO...',
+    '.OFFFFFFFFFFCCCBBFFFO...',
+    '.OFFFFFFFFFFFFFBBFFFO...',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFOOFFFFFFOFFFOFFO..',
+    '..OFFHO.OFFFFO.OFFFOFO..',
+    '...OOO..OFFFFO..OFFHO...',
+    '........OFFFFO...OOO....',
+    '.........OOOO...........',
+    '........................',
+    '........................',
+    '........................'
+  ],
+
+  walkSide2: [
+    '........................',
+    '..............OO........',
+    '.............OFPO..OO...',
+    '............OFFPPO.OFFO.',
+    '............OFFPPFOOFFFF',
+    '.OO........OFFFFFFFFFFFF',
+    'OFO........OFFFFFFFFFFFF',
+    '.OFFO.....OFFFFFFFFOHEFF',
+    '..OFO.....OFFFFFFFFOEEPO',
+    '..OFO.....OFFFFFFFFOFOOW',
+    '...OOOOOO.OFFFFFFFFFOOOW',
+    '..OFFFFFFOFFFCCCCFFFO...',
+    '.OFFFFFFFFFFCCCBBFFFO...',
+    '.OFFFFFFFFFFFFFBBFFFO...',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFOOFFFFFFOFFFOFFO..',
+    '...OFFFOOFFFFO.OFFHOFO..',
+    '...OFFHO.OOOO...OOOO....',
+    '....OOO.................',
+    '........................',
+    '........................',
+    '........................',
+    '........................'
+  ],
+
   fishCast: [
-    "..........OOOOOO........",
-    ".........OFFFFFFO.......",
-    "........OFFFFFFFFO......",
-    ".......OFFOOFFOFFO......",
-    "......OFFEHOFFFFFO.RR...",
-    "......OFFEEOFFFFPORRR...",
-    ".....OFFFFFFFFFFFFORR...",
-    "....OFFFOOOOOOFFFORR....",
-    "....OFFCCCCCCFFORR......",
-    "...OFFFFFFFBFFFORR......",
-    "..OFFFFFFFFFFFFORR......",
-    ".OFFFFFFFFFFFFFFORR.....",
-    ".OFFFOOFFFOOFFFO.RR.....",
-    "..OOO..OOO..OOO...RR....",
-    "...................RR...",
-    "....................RR..",
-    ".....................RR."
+    '..................RR....',
+    '.................RR.....',
+    '..............OO.RR.....',
+    '.............OFPORR..OO.',
+    '............OFFRR..O.OFF',
+    '............OFFPFRFOOFFF',
+    '..OO.......OFFFRFFFFFFFF',
+    '.OFFO......OFFFRFFFFOHEF',
+    '.OFFO.....OFFRRFFFFFOEEP',
+    '..OFO.....OFFFRFFFFFFFOO',
+    '...OOOOOO.OFFFFFFFFFFRRR',
+    '..OFFFFFFOFFFCCCCFFFRR..',
+    '.OFFFFFFFFFFCCCBBFFFORR.',
+    '.OFFFFFFFFFFFFFBBFFFO.RR',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFOOFFFFFFOFFFOFFO..',
+    '..OFFFO.OFFFFO.OFFFOFO..',
+    '..OFFHO.OFFFFO.OFFHO....',
+    '...OOO...OOOO...OOO.....',
+    '........................',
+    '........................',
+    '........................',
+    '........................'
   ],
 
   fishWait: [
-    "..........OOOOOO........",
-    ".........OFFFFFFO.......",
-    "........OFFFFFFFFO......",
-    ".......OFFOOFFOFFO......",
-    "......OFFEHOFFFFFO......",
-    "......OFFEEOFFFFPO.RR...",
-    ".....OFFFFFFFFFFFFORRR..",
-    "....OFFFOOOOOOFFFORRR...",
-    "....OFFCCCCCCFFORR......",
-    "...OFFFFFFFBFFFORR......",
-    "..OFFFFFFFFFFFFORR......",
-    ".OFFFFFFFFFFFFFFORR.....",
-    ".OFFFOOFFFOOFFFO.RR.....",
-    "..OOO..OOO..OOO...RR....",
-    "...................RR..."
+    '........................',
+    '........................',
+    '..............OO........',
+    '.............OFPO..OO...',
+    '............OFFPPO.OFFO.',
+    '............OFFPPFOOFFFF',
+    '..OO.......OFFFFFFFFFFFF',
+    '.OFFO......OFFFFFFFFOHEF',
+    '.OFFO.....OFFFFFFFFFOEEP',
+    '..OFO.....OFFFFFFFFFOFOO',
+    '...OOOOOO.OFFFFFFFFFFRRR',
+    '..OFFFFFFOFFFCCCCFFFRR..',
+    '.OFFFFFFFFFFCCCBBFFFORR.',
+    '.OFFFFFFFFFFFFFBBFFFO.RR',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFOOFFFFFFOFFFOFFO..',
+    '..OFFFO.OFFFFO.OFFFOFO..',
+    '..OFFHO.OFFFFO.OFFHO....',
+    '...OOO...OOOO...OOO.....',
+    '........................',
+    '........................',
+    '........................',
+    '........................'
+  ],
+
+  fishBite: [
+    '...................RR...',
+    '..................RR....',
+    '..............OO.RR.....',
+    '.............OFPORR..OO.',
+    '............OFFPPR.O.OFF',
+    '............OFFPPFRFOFFF',
+    '..OO.......OFFFRFFFFFFFF',
+    '.OFFO......OFFFRFFFFOHHF',
+    '.OFFO.....OFFRRFFFFFOEEP',
+    '..OFO.....OFFFRFFFFFFFOO',
+    '...OOOOOO.OFFFFFFFFFFRRR',
+    '..OFFFFFFOFFFCCCCFFFRR..',
+    '.OFFFFFFFFFFCCCBBFFFORR.',
+    '.OFFFFFFFFFFFFFBBFFFO.RR',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFOOFFFFFFOFFFOFFO..',
+    '..OFFFO.OFFFFO.OFFFOFO..',
+    '..OFFHO.OFFFFO.OFFHO....',
+    '...OOO...OOOO...OOO.....',
+    '........................',
+    '........................',
+    '........................',
+    '........................'
+  ],
+
+  fishReel1: [
+    '..................RR....',
+    '.................RR.....',
+    '..............OO.RR.....',
+    '.............OFPORR..OO.',
+    '............OFFRR..O.OFF',
+    '............OFFPFRFOOFFF',
+    '..OO.......OFFFRFFFFFFFF',
+    '.OFFO......OFFFRFFFFOHEF',
+    '.OFFO.....OFFRRFFFFFOEEP',
+    '..OFO.....OFFFRFFFFFFFOO',
+    '...OOOOOO.OFFFFFFFFFFRRR',
+    '..OFFFFFFOFFFCCCCFFFRR..',
+    '.OFFFFFFFFFFCCCBBFFFORR.',
+    '.OFFFFFFFFFFFFFBBFFFO.RR',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFOOFFFFFFOFFFOFFO..',
+    '..OFFFO.OFFFFO.OFFFOFO..',
+    '..OFFHO.OFFFFO.OFFHO....',
+    '...OOO...OOOO...OOO.....',
+    '........................',
+    '........................',
+    '........................',
+    '........................'
+  ],
+
+  fishReel2: [
+    '...................RR...',
+    '..................RR....',
+    '..............OO.RR.....',
+    '.............OFP.RR..OO.',
+    '............OFFPPR.O.OFF',
+    '............OFFPPFRFOFFF',
+    '..OO.......OFFFFFFFFFFFF',
+    '.OFFO......OFFFFFFFFOHEF',
+    '.OFFO.....OFFFFFFFFFOEEP',
+    '..OFO.....OFFFFFFFFFOFOO',
+    '...OOOOOO.OFFFFFFFFFFRRR',
+    '..OFFFFFFOFFFCCCCFFFRR..',
+    '.OFFFFFFFFFFCCCBBFFFORR.',
+    '.OFFFFFFFFFFFFFBBFFFO.RR',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '.OFFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFOOFFFFFFOFFFOFFO..',
+    '..OFFFO.OFFFFO.OFFFOFO..',
+    '..OFFHO.OFFFFO.OFFHO....',
+    '...OOO...OOOO...OOO.....',
+    '........................',
+    '........................',
+    '........................',
+    '........................'
   ],
 
   celebrate: [
-    "........OOOOOO..........",
-    ".......OFFFFFFO.........",
-    "......OFFFFFFFFO........",
-    ".....OFFOOFFOOFFO.......",
-    "....OF^^OFF^^OFFO.......",
-    "....OF^^OFF^^OFFO.......",
-    "...OFFFFFFPFFFFFFO......",
-    "...OFFFFFFOFFFFFFO......",
-    "...OFFFOOOOOOFFFO.......",
-    "....OFFCCCCCCFFO........",
-    "...OOFFFFBBFFFFOO.......",
-    "..OOFFFFFFFFFFFFOO......",
-    "..OOFFFFFFFFFFFFOO......",
-    "..OFFFOOFFFFOOFFFO......",
-    "...OOO...OO...OOO.......",
-    "......✨.....✨..........",
-    "....✨...🐟...✨........",
-    "......✨.....✨.........."
+    '........................',
+    '.....OO..........OO.....',
+    '....OFPO........OPFO....',
+    '...OFFPPO......OPPFFO...',
+    '...OFFPPFO.OO.OFPPFFO...',
+    '..OFFFFFFFOFFOFFFFFFFO..',
+    '..OFFFFFFFFFFFFFFFFFFO..',
+    '..OFFFSFFFFFFFFFFSFFFO..',
+    '..OFFO^^OFFFFFFO^^OFFO..',
+    '..OFFO^^OFFPPFFO^^OFFO..',
+    '.WOOFFFFFFFFFFFFFFFFOOW.',
+    '..OFFFFFFFOOOOFFFFFFFO..',
+    '...OFFFCCCCCCCCCCFFFO...',
+    '....OCCCCBBBBCCCCO......',
+    '.....OFFFBBBBFFFO...OO..',
+    '..OOFFFFFFFFFFFFOOF.OFFO',
+    '.OFFHFFFFFFFFFFFFHFOFFFO',
+    '.OFFHFOOFFFFFFOFFHFOFFFO',
+    '..OOO..OFFFFO...OOO.OFO.',
+    '.......OFFHO.....OFFHO..',
+    '.......OFFHO.....OFFHO..',
+    '........OOO.......OOO...',
+    '........................',
+    '........................'
   ]
 };
 
 // Generate Full Spritesheet for a Given Cat Breed
 export function generateCatSpriteSheet(breed: CatBreed = 'celestial'): CatSpriteSheet {
   const colors = getCatBreedColors(breed);
-  // Add fishing rod and celebration colors
   colors['R'] = '#f59e0b'; // Golden fishing rod
   colors['^'] = '#38bdf8'; // Happy closed crescent eyes
 
@@ -330,28 +612,28 @@ export function generateCatSpriteSheet(breed: CatBreed = 'celestial'): CatSprite
   const idleUp = make(CAT_MATRICES.idleUp);
   const idleSide = make(CAT_MATRICES.idleSide);
 
-  // Walk frames with subtle paw bob
+  // Walk frames with alternating paw step animations
   const walkDown = [
-    make(CAT_MATRICES.idleDown1),
-    make(CAT_MATRICES.idleDown2),
+    make(CAT_MATRICES.walkDown1),
+    make(CAT_MATRICES.walkDown2),
   ];
 
   const walkUp = [
-    make(CAT_MATRICES.idleUp),
-    make(CAT_MATRICES.idleUp),
+    make(CAT_MATRICES.walkUp1),
+    make(CAT_MATRICES.walkUp2),
   ];
 
   const walkSide = [
-    make(CAT_MATRICES.idleSide),
-    make(CAT_MATRICES.idleSide),
+    make(CAT_MATRICES.walkSide1),
+    make(CAT_MATRICES.walkSide2),
   ];
 
   const fishCast = make(CAT_MATRICES.fishCast);
   const fishWait = make(CAT_MATRICES.fishWait);
-  const fishBite = make(CAT_MATRICES.fishCast);
+  const fishBite = make(CAT_MATRICES.fishBite);
   const fishReel = [
-    make(CAT_MATRICES.fishWait),
-    make(CAT_MATRICES.fishCast)
+    make(CAT_MATRICES.fishReel1),
+    make(CAT_MATRICES.fishReel2)
   ];
   const celebrate = make(CAT_MATRICES.celebrate);
 

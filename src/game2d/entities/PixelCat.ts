@@ -105,21 +105,22 @@ export class PixelCat {
 
   // Get current fishing rod tip coordinate in world space for line attachment
   public getRodTipWorldPos(): { x: number; y: number } {
-    let offsetX = 0;
-    let offsetY = -8;
+    let offsetX = 10;
+    let offsetY = -2;
 
-    if (this.facing === 'up') {
-      offsetX = 6;
-      offsetY = -18;
+    if (this.animState === 'fish_cast') {
+      offsetX = 7;
+      offsetY = -15;
+    } else if (this.facing === 'up') {
+      offsetX = 4;
+      offsetY = -14;
     } else if (this.facing === 'down') {
-      offsetX = 6;
-      offsetY = 12;
-    } else if (this.facing === 'right') {
-      offsetX = 16;
-      offsetY = -6;
-    } else if (this.facing === 'left') {
-      offsetX = -16;
-      offsetY = -6;
+      offsetX = 4;
+      offsetY = 6;
+    }
+
+    if (this.facing === 'left') {
+      offsetX = -offsetX;
     }
 
     return { x: this.x + offsetX, y: this.y + offsetY };

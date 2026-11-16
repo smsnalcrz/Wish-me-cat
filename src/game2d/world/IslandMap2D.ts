@@ -316,6 +316,9 @@ export class IslandMap2D {
 
     // Layer 2: Handcrafted Celestial Starpond Water
     this.water.render(ctx, camera, time);
+
+    // Layer 3: Wooden Pier Decks (planks and water stilts rendered under standing characters)
+    this.stationManager.renderPierDecks(ctx, camera);
   }
 
   // Render individual cobblestone pavers
@@ -358,10 +361,13 @@ export class IslandMap2D {
       draw: () => cat.render(ctx, camera)
     });
 
-    // Stations
+    // Stations & Mooring Lanterns
     this.stationManager.stations.forEach(st => {
+      const sortY = st.type === 'pier'
+        ? st.y + (st.pierDirection === 'up' ? -18 : (st.pierDirection === 'down' ? 18 : -10))
+        : st.y;
       drawList.push({
-        y: st.y,
+        y: sortY,
         draw: () => this.stationManager.renderStation(ctx, camera, st, nearestStation?.id === st.id, time)
       });
     });
