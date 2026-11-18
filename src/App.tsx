@@ -13,6 +13,7 @@ import { ConstellationModal } from './components/menus/ConstellationModal';
 import { RegionModal } from './components/menus/RegionModal';
 import { PauseModal } from './components/menus/PauseModal';
 import { CatWardrobeModal } from './components/menus/CatWardrobeModal';
+import { WishModal } from './components/menus/WishModal';
 import { SaveManager, DEFAULT_SAVE } from './systems/save/SaveManager';
 import { AudioManager } from './systems/audio/AudioManager';
 import { FishingSystem2D, MinigameState2D } from './game2d/fishing/FishingSystem2D';
@@ -184,6 +185,7 @@ export const App: React.FC = () => {
           onOpenConstellations={() => setActiveModal('constellations')}
           onOpenRegions={() => setActiveModal('regions')}
           onOpenWardrobe={() => setActiveModal('wardrobe')}
+          onOpenWishing={() => setActiveModal('wishing')}
           onOpenPause={() => setActiveModal('pause')}
           onToggleMute={toggleMute}
           isMuted={isMuted}
@@ -286,6 +288,14 @@ export const App: React.FC = () => {
           onSelectBreed={(breed) => {
             showToast('🐱 Cat Model Switched!', `You are now exploring as ${breed.toUpperCase()}!`);
           }}
+        />
+      )}
+
+      {activeModal === 'wishing' && (
+        <WishModal
+          saveData={saveData}
+          onClose={() => setActiveModal(null)}
+          onUpdateSave={setSaveData}
         />
       )}
 

@@ -25,6 +25,7 @@ interface HUDProps {
   onOpenConstellations: () => void;
   onOpenRegions: () => void;
   onOpenWardrobe: () => void;
+  onOpenWishing: () => void;
   onOpenPause: () => void;
   onToggleMute: () => void;
   isMuted: boolean;
@@ -40,6 +41,7 @@ export const HUD: React.FC<HUDProps> = ({
   onOpenConstellations,
   onOpenRegions,
   onOpenWardrobe,
+  onOpenWishing,
   onOpenPause,
   onToggleMute,
   isMuted
@@ -78,12 +80,30 @@ export const HUD: React.FC<HUDProps> = ({
 
         {/* Currency & Action shortcuts */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div
+            className="cosmic-panel currency-badge pointer-events-auto"
+            onClick={onOpenWishing}
+            style={{ cursor: 'pointer', background: '#0e0c29', borderColor: '#7c3aed' }}
+            title="Celestial Wish Tokens - Click to Visit Fountain"
+          >
+            <span style={{ fontSize: '15px' }}>⭐</span>
+            <span style={{ color: '#fef08a' }}>{saveData.wishTokens || 0} WISHES</span>
+          </div>
+
           <div className="cosmic-panel currency-badge pointer-events-auto">
             <PixelStardustIcon size={20} />
             <span>{saveData.stardust.toLocaleString()} STARDUST</span>
           </div>
 
           <div className="quick-buttons pointer-events-auto">
+            <button
+              className="icon-button"
+              onClick={onOpenWishing}
+              title="Celestial Wishing Fountain (Make Wishes & Buffs)"
+              style={{ background: '#3b0764', borderColor: '#a855f7' }}
+            >
+              <span style={{ fontSize: '18px' }}>🌟</span>
+            </button>
             <button className="icon-button" onClick={onOpenWardrobe} title="Cat Wardrobe (Change Breed)">
               <img
                 src={`/assets/character/${saveData.catBreed || 'celestial'}/CharacterPortraits/icon.png`}
@@ -115,6 +135,44 @@ export const HUD: React.FC<HUDProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Active Blessings Bar (Directly below top HUD) */}
+      {(saveData.activeBlessings || []).filter(b => b.expiresAt > Date.now()).length > 0 && (
+        <div style={{ position: 'absolute', top: '70px', right: '20px', display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end', zIndex: 10 }}>
+          {(saveData.activeBlessings || [])
+            .filter(b => b.expiresAt > Date.now())
+            .map(b => {
+              const secLeft = Math.max(0, Math.floor((b.expiresAt - Date.now()) / 1000));
+              const m = Math.floor(secLeft / 60);
+              const s = secLeft % 60;
+              return (
+                <div
+                  key={b.id}
+                  className="cosmic-panel pointer-events-auto"
+                  onClick={onOpenWishing}
+                  style={{
+                    padding: '4px 10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    border: '1px solid #38bdf8',
+                    boxShadow: '0 0 10px rgba(56, 189, 248, 0.3)'
+                  }}
+                  title={`${b.description} (Click to open Wishing Fountain)`}
+                >
+                  <span style={{ fontSize: '14px' }}>{b.icon}</span>
+                  <span style={{ color: '#fef08a', fontFamily: 'var(--font-heading)' }}>{b.name}</span>
+                  <span style={{ color: '#38bdf8', fontFamily: 'var(--font-heading)', fontSize: '10px' }}>
+                    {m}m {s < 10 ? '0' : ''}{s}s
+                  </span>
+                </div>
+              );
+            })}
+        </div>
+      )}
 
       {/* Center Dynamic Interaction Prompt */}
       {interactionPrompt && (

@@ -37,6 +37,8 @@ export class IslandMap2D {
   public trees: TreeProp[] = [];
   private spaceStars: { x: number; y: number; size: number; speed: number; alpha: number }[] = [];
   private fallingPetals: { x: number; y: number; vx: number; vy: number; rot: number; color: string }[] = [];
+  private shootingStars: { x: number; y: number; vx: number; vy: number; len: number; alpha: number; timer: number; color: string }[] = [];
+  private fireflies: { x: number; y: number; baseX: number; baseY: number; phase: number; speed: number; color: string }[] = [];
 
   // Ground Grass Tufts & Wildflowers
   private grassTufts: { x: number; y: number; color: string; width: number; height: number }[] = [];
@@ -126,6 +128,38 @@ export class IslandMap2D {
       });
     }
 
+    // Initialize Shooting Stars (Streaking across deep space)
+    for (let i = 0; i < 3; i++) {
+      this.shootingStars.push({
+        x: -500 + Math.random() * 400,
+        y: -400 - Math.random() * 200,
+        vx: 340 + Math.random() * 160,
+        vy: 240 + Math.random() * 120,
+        len: 45 + Math.random() * 30,
+        alpha: 0,
+        timer: i * 3.5 + Math.random() * 2,
+        color: i % 2 === 0 ? '#38bdf8' : '#fef08a'
+      });
+    }
+
+    // Initialize Atmospheric Floating Fireflies & Stardust Wisps
+    for (let i = 0; i < 22; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = 0.45 + Math.random() * 0.45;
+      const bx = Math.cos(angle) * this.islandRadiusX * r;
+      const by = Math.sin(angle) * this.islandRadiusY * r;
+      const colors = ['#fde047', '#38bdf8', '#86efac', '#c084fc'];
+      this.fireflies.push({
+        x: bx,
+        y: by,
+        baseX: bx,
+        baseY: by,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.8 + Math.random() * 1.2,
+        color: colors[i % colors.length]
+      });
+    }
+
     // Generate Handcrafted Cobblestones along pathways
     this.generatePathCobblestones();
   }
@@ -190,6 +224,30 @@ export class IslandMap2D {
       petal.rot += delta * 2;
       if (petal.y > 300) petal.y = -300;
       if (petal.x > 350) petal.x = -350;
+    }
+
+    // Streaking Shooting Stars
+    for (const ss of this.shootingStars) {
+      ss.timer -= delta;
+      if (ss.timer <= 0) {
+        ss.x += ss.vx * delta;
+        ss.y += ss.vy * delta;
+        ss.alpha = Math.min(1.0, ss.alpha + delta * 2.5);
+        if (ss.y > 500 || ss.x > 800) {
+          // Reset
+          ss.x = -600 + Math.random() * 400;
+          ss.y = -400 - Math.random() * 150;
+          ss.alpha = 0;
+          ss.timer = 3.5 + Math.random() * 4.0;
+        }
+      }
+    }
+
+    // Atmospheric Floating Fireflies
+    for (const ff of this.fireflies) {
+      ff.phase += ff.speed * delta;
+      ff.x = ff.baseX + Math.sin(ff.phase) * 14;
+      ff.y = ff.baseY + Math.cos(ff.phase * 0.8) * 10;
     }
   }
 
@@ -258,6 +316,27 @@ export class IslandMap2D {
     ctx.fillStyle = reg.skyColor || '#070514';
     ctx.fillRect(0, 0, camera.viewportWidth, camera.viewportHeight);
 
+    // Glowing Parallax Nebulae (Ethereal Cosmic Clouds)
+    const neb1X = ((-camera.x * 0.12) % camera.viewportWidth + camera.viewportWidth) % camera.viewportWidth;
+    const neb1Y = ((-camera.y * 0.12) % camera.viewportHeight + camera.viewportHeight) % camera.viewportHeight;
+    const neb1Grad = ctx.createRadialGradient(neb1X, neb1Y, 10, neb1X, neb1Y, 260);
+    const nebPulse = 0.12 + Math.sin(time * 0.5) * 0.04;
+    neb1Grad.addColorStop(0, `rgba(147, 51, 234, ${nebPulse * 1.5})`);
+    neb1Grad.addColorStop(0.5, `rgba(99, 102, 241, ${nebPulse})`);
+    neb1Grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = neb1Grad;
+    ctx.fillRect(0, 0, camera.viewportWidth, camera.viewportHeight);
+
+    const neb2X = ((camera.viewportWidth * 0.7 - camera.x * 0.15) % camera.viewportWidth + camera.viewportWidth) % camera.viewportWidth;
+    const neb2Y = ((camera.viewportHeight * 0.6 - camera.y * 0.15) % camera.viewportHeight + camera.viewportHeight) % camera.viewportHeight;
+    const neb2Grad = ctx.createRadialGradient(neb2X, neb2Y, 10, neb2X, neb2Y, 220);
+    const nebPulse2 = 0.10 + Math.cos(time * 0.4) * 0.03;
+    neb2Grad.addColorStop(0, `rgba(14, 165, 233, ${nebPulse2 * 1.4})`);
+    neb2Grad.addColorStop(0.6, `rgba(56, 189, 248, ${nebPulse2 * 0.6})`);
+    neb2Grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = neb2Grad;
+    ctx.fillRect(0, 0, camera.viewportWidth, camera.viewportHeight);
+
     // Distant Parallax Stars
     this.spaceStars.forEach(st => {
       const screenX = ((st.x - camera.x * 0.2) % camera.viewportWidth + camera.viewportWidth) % camera.viewportWidth;
@@ -265,6 +344,30 @@ export class IslandMap2D {
       const alpha = st.alpha * (0.6 + Math.sin(time * st.speed * 4) * 0.4);
       ctx.fillStyle = `rgba(254, 240, 138, ${alpha})`;
       ctx.fillRect(Math.floor(screenX), Math.floor(screenY), st.size, st.size);
+    });
+
+    // Streaking Shooting Stars
+    this.shootingStars.forEach(ss => {
+      if (ss.timer <= 0 && ss.alpha > 0.01) {
+        const sStart = camera.worldToScreen(ss.x, ss.y);
+        const sEnd = camera.worldToScreen(ss.x - ss.vx * 0.08, ss.y - ss.vy * 0.08);
+
+        const grad = ctx.createLinearGradient(sStart.x, sStart.y, sEnd.x, sEnd.y);
+        grad.addColorStop(0, `rgba(255, 255, 255, ${ss.alpha})`);
+        grad.addColorStop(0.3, ss.color === '#38bdf8' ? `rgba(56, 189, 248, ${ss.alpha * 0.8})` : `rgba(254, 240, 138, ${ss.alpha * 0.8})`);
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(sStart.x, sStart.y);
+        ctx.lineTo(sEnd.x, sEnd.y);
+        ctx.stroke();
+
+        // Star head glint
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(sStart.x - 1, sStart.y - 1, 3, 3);
+      }
     });
 
     const centerScreen = camera.worldToScreen(0, 0);
@@ -413,6 +516,24 @@ export class IslandMap2D {
       ctx.fillStyle = petal.color;
       ctx.fillRect(Math.floor(-1.5 * scale), Math.floor(-1 * scale), Math.floor(3 * scale), Math.floor(2 * scale));
       ctx.restore();
+    });
+
+    // Layer 6: Floating Fireflies & Atmospheric Starlight Wisps
+    this.fireflies.forEach(ff => {
+      const p = camera.worldToScreen(ff.x, ff.y);
+      const glow = 0.4 + Math.sin(ff.phase * 2) * 0.4;
+
+      // Soft outer glow halo
+      ctx.fillStyle = ff.color === '#fde047'
+        ? `rgba(253, 224, 71, ${glow * 0.3})`
+        : `rgba(56, 189, 248, ${glow * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(p.x + 1 * scale, p.y + 1 * scale, 6 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core pixel mote
+      ctx.fillStyle = ff.color;
+      ctx.fillRect(Math.floor(p.x), Math.floor(p.y), Math.max(1, Math.floor(2 * scale)), Math.max(1, Math.floor(2 * scale)));
     });
   }
 }

@@ -13,6 +13,7 @@ import { EQUIPMENT, getStatValue } from '../../data/equipment';
 import { CONSTELLATIONS } from '../../data/constellations';
 import { SaveManager } from '../../systems/save/SaveManager';
 import { AudioManager } from '../../systems/audio/AudioManager';
+import { WishManager } from '../../systems/wishing/WishManager';
 import { GameState, CatchResult, CelestialCreature, CreatureVariant } from '../../types/game';
 
 export interface MinigameState2D {
@@ -28,6 +29,9 @@ export interface MinigameState2D {
   lastAction: 'hit' | 'perfect' | 'miss' | null;
   creatureName?: string;
   creatureRarity?: string;
+  tension: number; // 0 to 100
+  fishStruggle: 'calm' | 'thrashing' | 'tired';
+  combo: number;
 }
 
 export class FishingSystem2D {
@@ -44,6 +48,7 @@ export class FishingSystem2D {
   private biteTimer: number = 0;
   private biteWaitTime: number = 3.5;
   private candidateCreature: CelestialCreature | null = null;
+  private struggleTimer: number = 0;
 
   // Minigame
   public minigame: MinigameState2D = {
@@ -56,7 +61,10 @@ export class FishingSystem2D {
     requiredSuccesses: 3,
     missesLeft: 3,
     maxMisses: 3,
-    lastAction: null
+    lastAction: null,
+    tension: 10,
+    fishStruggle: 'calm',
+    combo: 0
   };
 
   // UI Event Callbacks
@@ -145,7 +153,14 @@ export class FishingSystem2D {
 
         const saveData = SaveManager.getData();
         const baitBonus = getStatValue('bait', saveData.baitLevel) / 100;
-        this.biteWaitTime = Math.max(1.2, 3.6 * (1.0 - baitBonus * 0.5) + (Math.random() - 0.5) * 1.2);
+        let waitBase = 3.6 * (1.0 - baitBonus * 0.5) + (Math.random() - 0.5) * 1.2;
+        if (WishManager.hasBlessing('swift_paws')) {
+          waitBase *= 0.6;
+        }
+        if (saveData.equippedAccessories?.hat === 'hat_wizard_hood') {
+          waitBase *= 0.85;
+        }
+        this.biteWaitTime = Math.max(0.8, waitBase);
         this.biteTimer = 0;
 
         this.setState('waiting');
@@ -184,7 +199,7 @@ export class FishingSystem2D {
     }
   }
 
-  // Roll Celestial Creature based on active region and player level
+  // Roll Celestial Creature based on active region, blessings, accessories, and player level
   private rollCelestialCreature(): CelestialCreature {
     const saveData = SaveManager.getData();
     const regionId = saveData.currentRegionId || 'region_moonpool';
@@ -195,12 +210,31 @@ export class FishingSystem2D {
     );
 
     const activePool = pool.length > 0 ? pool : [CREATURES[0]];
-    const totalWeight = activePool.reduce((acc, c) => acc + c.spawnWeight, 0);
-    let r = Math.random() * totalWeight;
+
+    // Rare Attraction Multipliers (Abyssal Magnet Blessing + Cosmic Crown)
+    const hasMagnet = WishManager.hasBlessing('abyssal_magnet');
+    const hasCrown = saveData.equippedAccessories?.hat === 'hat_cosmic_crown';
+    let rareMultiplier = 1.0;
+    if (hasMagnet) rareMultiplier *= 2.2;
+    if (hasCrown) rareMultiplier *= 1.35;
+
+    let totalWeight = 0;
+    const weights: number[] = [];
 
     for (const c of activePool) {
-      r -= c.spawnWeight;
-      if (r <= 0) return c;
+      let w = c.spawnWeight;
+      if (c.rarity !== 'common' && c.rarity !== 'uncommon') {
+        w *= rareMultiplier;
+      }
+      weights.push(w);
+      totalWeight += w;
+    }
+
+    let r = Math.random() * totalWeight;
+
+    for (let i = 0; i < activePool.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return activePool[i];
     }
     return activePool[0];
   }
@@ -211,23 +245,47 @@ export class FishingSystem2D {
     const saveData = SaveManager.getData();
     const lineBonus = getStatValue('line', saveData.lineLevel);
     const baseWidth = Math.max(0.18, 0.32 - this.candidateCreature.catchDifficulty * 0.16);
-    const safeZoneWidth = Math.min(0.55, baseWidth + (lineBonus / 100) * 0.15);
+    let safeWidth = baseWidth + (lineBonus / 100) * 0.15;
 
-    const missesLeft = 3 + Math.floor((saveData.bobberLevel - 1) * 0.34);
+    // Apply Celestial Clarity Blessing & Accessories
+    if (WishManager.hasBlessing('celestial_clarity')) {
+      safeWidth *= 1.5;
+    }
+    if (saveData.equippedAccessories?.charm === 'charm_solar_amulet') {
+      safeWidth *= 1.25;
+    }
+    if (saveData.equippedAccessories?.cape === 'cape_nebula_cloak') {
+      safeWidth *= 1.15;
+    }
+    const safeZoneWidth = Math.min(0.70, safeWidth);
 
+    let speed = 1.5 + this.candidateCreature.catchDifficulty * 1.6;
+    if (WishManager.hasBlessing('celestial_clarity')) {
+      speed *= 0.75;
+    }
+
+    let missesLeft = 3 + Math.floor((saveData.bobberLevel - 1) * 0.34);
+    if (saveData.equippedAccessories?.charm === 'charm_lunar_pearl') {
+      missesLeft += 1;
+    }
+
+    this.struggleTimer = 0;
     this.minigame = {
       cursor: 0,
       direction: 1,
-      speed: 1.5 + this.candidateCreature.catchDifficulty * 1.6,
+      speed,
       safeZoneCenter: 0.35 + Math.random() * 0.3,
       safeZoneWidth,
       currentSuccesses: 0,
-      requiredSuccesses: 3,
+      requiredSuccesses: 3 + (this.candidateCreature.rarity === 'legendary' || this.candidateCreature.rarity === 'mythic' ? 1 : 0),
       missesLeft,
       maxMisses: missesLeft,
       lastAction: null,
       creatureName: this.candidateCreature.name,
-      creatureRarity: this.candidateCreature.rarity
+      creatureRarity: this.candidateCreature.rarity,
+      tension: 10,
+      fishStruggle: 'calm',
+      combo: 0
     };
 
     this.bobber.isReeling = true;
@@ -237,8 +295,25 @@ export class FishingSystem2D {
   }
 
   private updateMinigame(delta: number): void {
-    // Ping-pong moving cursor back and forth
-    this.minigame.cursor += this.minigame.direction * this.minigame.speed * delta;
+    this.struggleTimer += delta;
+
+    // Cycle struggle mood every 2.8s
+    if (this.struggleTimer > 2.8) {
+      this.struggleTimer = 0;
+      const moods: ('calm' | 'thrashing' | 'tired')[] = ['calm', 'thrashing', 'tired'];
+      const nextMood = moods[Math.floor(Math.random() * moods.length)];
+      this.minigame.fishStruggle = nextMood;
+      if (nextMood === 'thrashing') {
+        this.water.triggerRipple(this.bobber.x, this.bobber.y, 28);
+      }
+    }
+
+    // Dynamic speed based on struggle mood
+    let currentSpeed = this.minigame.speed;
+    if (this.minigame.fishStruggle === 'thrashing') currentSpeed *= 1.35;
+    if (this.minigame.fishStruggle === 'tired') currentSpeed *= 0.65;
+
+    this.minigame.cursor += this.minigame.direction * currentSpeed * delta;
 
     if (this.minigame.cursor >= 1.0) {
       this.minigame.cursor = 1.0;
@@ -246,6 +321,13 @@ export class FishingSystem2D {
     } else if (this.minigame.cursor <= 0.0) {
       this.minigame.cursor = 0.0;
       this.minigame.direction = 1;
+    }
+
+    // Dynamic tension balance
+    if (this.minigame.fishStruggle === 'thrashing') {
+      this.minigame.tension = Math.min(100, this.minigame.tension + 6 * delta);
+    } else {
+      this.minigame.tension = Math.max(5, this.minigame.tension - 4 * delta);
     }
 
     this.onMinigameUpdate?.({ ...this.minigame });
@@ -259,13 +341,17 @@ export class FishingSystem2D {
     const center = this.minigame.safeZoneCenter;
     const halfWidth = this.minigame.safeZoneWidth / 2;
     const isHit = Math.abs(cursor - center) <= halfWidth;
-    const isPerfect = Math.abs(cursor - center) <= halfWidth * 0.4;
+    const isPerfect = Math.abs(cursor - center) <= halfWidth * 0.38;
 
     if (isHit) {
-      this.minigame.currentSuccesses += 1;
+      this.minigame.combo += 1;
+      const bonusHit = isPerfect || (this.minigame.combo >= 3 && Math.random() < 0.5);
+      this.minigame.currentSuccesses += bonusHit ? 2 : 1;
       this.minigame.lastAction = isPerfect ? 'perfect' : 'hit';
+      this.minigame.tension = Math.max(0, this.minigame.tension - 20);
+
       this.audio.playMinigameHit(isPerfect);
-      this.water.triggerRipple(this.bobber.x, this.bobber.y, 22);
+      this.water.triggerRipple(this.bobber.x, this.bobber.y, isPerfect ? 32 : 22);
 
       // Reposition safe zone
       this.minigame.safeZoneCenter = 0.25 + Math.random() * 0.5;
@@ -275,11 +361,13 @@ export class FishingSystem2D {
         return;
       }
     } else {
+      this.minigame.combo = 0;
       this.minigame.missesLeft -= 1;
       this.minigame.lastAction = 'miss';
+      this.minigame.tension = Math.min(100, this.minigame.tension + 28);
       this.audio.playMinigameMiss();
 
-      if (this.minigame.missesLeft <= 0) {
+      if (this.minigame.missesLeft <= 0 || this.minigame.tension >= 100) {
         // Line snapped, creature escaped!
         this.onNotification?.('LINE SNAPPED!', 'The celestial creature broke free!');
         this.cancelFishing();
@@ -295,14 +383,41 @@ export class FishingSystem2D {
     if (!this.candidateCreature) return;
 
     const creature = this.candidateCreature;
-    const variant = rollVariant(creature);
+    let variant = rollVariant(creature);
+
+    // Aurora Fortune Blessing: Re-roll for shiny/golden if normal
+    if (WishManager.hasBlessing('aurora_fortune') && variant === 'normal') {
+      const reroll = rollVariant(creature);
+      if (reroll !== 'normal') variant = reroll;
+    }
+
     const weight = rollWeight(creature, variant);
-    const earnedStardust = calculateStardustReward(creature, variant, weight);
-    const earnedExp = calculateExpReward(creature, variant);
+    let earnedStardust = calculateStardustReward(creature, variant, weight);
+    let earnedExp = calculateExpReward(creature, variant);
 
     // Save Manager Records
     const { isNewDiscovery, isNewRecord } = SaveManager.recordCatch(creature.id, variant, weight);
     const saveData = SaveManager.getData();
+
+    // Celestial Blessings & Accessory Reward Boosts
+    if (WishManager.hasBlessing('starfall_abundance')) {
+      earnedStardust *= 2;
+    }
+    if (saveData.equippedAccessories?.hat === 'hat_star_beret') {
+      earnedExp = Math.round(earnedExp * 1.2);
+    }
+    if (saveData.equippedAccessories?.hat === 'hat_straw_fisherman' && creature.rarity === 'common') {
+      earnedStardust = Math.round(earnedStardust * 1.15);
+    }
+
+    // Award Wish Tokens!
+    let bonusTokens = 0;
+    if (creature.rarity === 'epic' || creature.rarity === 'legendary' || creature.rarity === 'mythic') {
+      bonusTokens += 1;
+    }
+    if (isNewDiscovery) {
+      bonusTokens += 1;
+    }
 
     // Reward Stardust & Exp
     saveData.stardust += earnedStardust;
@@ -315,7 +430,13 @@ export class FishingSystem2D {
       saveData.playerExp -= reqExp;
       saveData.playerLevel += 1;
       leveledUp = true;
+      bonusTokens += 1; // +1 Wish Token per Level Up!
       reqExp = Math.round(50 * Math.pow(saveData.playerLevel, 1.45));
+    }
+
+    if (bonusTokens > 0) {
+      saveData.wishTokens = (saveData.wishTokens || 0) + bonusTokens;
+      this.onNotification?.('✦ WISH TOKEN GRANTED! ✦', `You earned ${bonusTokens} Wish Token${bonusTokens > 1 ? 's' : ''}! Visit the Wishing Fountain!`);
     }
 
     SaveManager.save(saveData);

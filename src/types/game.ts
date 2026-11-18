@@ -125,6 +125,55 @@ export interface SaveData {
   cameraSensitivity: number;
   catBreed?: CatBreed;
   bgmTrack?: BGMTrackId;
+  wishTokens: number;
+  totalWishesMade: number;
+  activeBlessings: ActiveBlessing[];
+  unlockedAccessories: string[];
+  equippedAccessories: {
+    hat?: string;
+    cape?: string;
+    charm?: string;
+  };
+}
+
+export type BlessingType = 
+  | 'starfall_abundance'   // 2x Stardust rewards
+  | 'celestial_clarity'    // +50% larger minigame safe zone
+  | 'abyssal_magnet'       // +60% chance to attract rare/epic/mythic fish
+  | 'swift_paws'           // +30% movement speed and instant bite reaction
+  | 'aurora_fortune';      // 3x Shiny & Golden variant chance
+
+export interface ActiveBlessing {
+  id: BlessingType;
+  name: string;
+  description: string;
+  icon: string;
+  durationSeconds: number;
+  expiresAt: number; // timestamp in ms
+}
+
+export type CatAccessoryType = 'hat' | 'cape' | 'charm';
+
+export interface CatAccessory {
+  id: string;
+  name: string;
+  description: string;
+  type: CatAccessoryType;
+  icon: string;
+  rarity: CreatureRarity;
+  bonusDescription: string;
+}
+
+export interface WishReward {
+  id: string;
+  name: string;
+  description: string;
+  rarity: CreatureRarity;
+  type: 'blessing' | 'accessory' | 'stardust_jackpot' | 'cosmic_event';
+  blessing?: ActiveBlessing;
+  accessory?: CatAccessory;
+  stardustAmount?: number;
+  eventSummoned?: string;
 }
 
 export type BGMTrackId = 'space_sprinkles' | 'mesmerizing_galaxy' | 'cosmic_ambient';

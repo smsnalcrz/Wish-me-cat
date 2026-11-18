@@ -10,7 +10,8 @@ import {
   generateQuestBoardSprite,
   generateConstellationAltarSprite,
   generateAlmanacPedestalSprite,
-  generateRealmGatewaySprite
+  generateRealmGatewaySprite,
+  generateWishingFountainSprite
 } from '../rendering/PixelSprites';
 
 export interface InteractiveStation2D {
@@ -20,13 +21,23 @@ export interface InteractiveStation2D {
   x: number;
   y: number;
   radius: number;
-  type: 'shop' | 'quest' | 'constellation' | 'almanac' | 'portal' | 'pier';
+  type: 'shop' | 'quest' | 'constellation' | 'almanac' | 'portal' | 'pier' | 'wishing';
   pierDirection?: 'up' | 'down' | 'left' | 'right';
   castTarget?: { x: number; y: number };
 }
 
 export class StationManager2D {
   public stations: InteractiveStation2D[] = [
+    // 0. Celestial Wishing Fountain (Northwest of pond)
+    {
+      id: 'station_wishing',
+      name: 'Celestial Wishing Fountain',
+      prompt: 'Press [E] to Make a Celestial Wish',
+      x: -115,
+      y: -145,
+      radius: 40,
+      type: 'wishing'
+    },
     // 1. Cosmic Gear Shop (East-Northeast)
     {
       id: 'station_shop',
@@ -131,6 +142,7 @@ export class StationManager2D {
   private altarCanvas: HTMLCanvasElement | null = null;
   private almanacCanvas: HTMLCanvasElement | null = null;
   private portalCanvas: HTMLCanvasElement | null = null;
+  private wishingCanvas: HTMLCanvasElement | null = null;
 
   constructor() {
     this.initSprites();
@@ -142,6 +154,7 @@ export class StationManager2D {
     this.altarCanvas = generateConstellationAltarSprite();
     this.almanacCanvas = generateAlmanacPedestalSprite();
     this.portalCanvas = generateRealmGatewaySprite();
+    this.wishingCanvas = generateWishingFountainSprite();
   }
 
   public getNearestStation(catX: number, catY: number): InteractiveStation2D | null {
@@ -273,6 +286,33 @@ export class StationManager2D {
           const w = 56 * scale;
           const h = 64 * scale;
           ctx.drawImage(this.portalCanvas, screen.x - w / 2, screen.y - h + 10 * scale, w, h);
+        }
+        break;
+      }
+
+      case 'wishing': {
+        if (this.wishingCanvas) {
+          const w = 56 * scale;
+          const h = 52 * scale;
+          ctx.drawImage(this.wishingCanvas, screen.x - w / 2, screen.y - h + 10 * scale, w, h);
+
+          // Animated hovering Wish Star above fountain
+          const starBob = Math.sin(time * 3.5) * 4 * scale;
+          const starX = screen.x;
+          const starY = screen.y - h - 4 * scale + starBob;
+
+          // Star glow
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.4)';
+          ctx.beginPath();
+          ctx.arc(starX, starY, 12 * scale, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 4-pointed pixel star
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(starX - 2 * scale, starY - 7 * scale, 4 * scale, 14 * scale);
+          ctx.fillRect(starX - 7 * scale, starY - 2 * scale, 14 * scale, 4 * scale);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(starX - 2 * scale, starY - 2 * scale, 4 * scale, 4 * scale);
         }
         break;
       }

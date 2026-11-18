@@ -24,7 +24,7 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
     >
       {/* Header Info */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <PixelStardustIcon size={20} />
           <span style={{ fontSize: '13px', fontFamily: 'var(--font-heading)', color: '#fef08a' }}>
             {minigame.creatureName ? `REELING: ${minigame.creatureName.toUpperCase()}` : 'REELING CELESTIAL STAR'}
@@ -34,11 +34,35 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
               {minigame.creatureRarity}
             </span>
           )}
+
+          {/* Fish Struggle Mood Badge */}
+          {minigame.fishStruggle === 'thrashing' && (
+            <span style={{ background: '#7f1d1d', color: '#fca5a5', border: '1px solid #ef4444', padding: '2px 6px', fontSize: '9px', fontFamily: 'var(--font-heading)', fontWeight: 'bold' }}>
+              ⚡ THRASHING!
+            </span>
+          )}
+          {minigame.fishStruggle === 'tired' && (
+            <span style={{ background: '#14532d', color: '#86efac', border: '1px solid #22c55e', padding: '2px 6px', fontSize: '9px', fontFamily: 'var(--font-heading)', fontWeight: 'bold' }}>
+              💤 TIRED (STRIKE!)
+            </span>
+          )}
+          {minigame.fishStruggle === 'calm' && (
+            <span style={{ background: '#0c4a6e', color: '#7dd3fc', border: '1px solid #0284c7', padding: '2px 6px', fontSize: '9px', fontFamily: 'var(--font-heading)' }}>
+              🐟 CALM
+            </span>
+          )}
+
+          {/* Combo Indicator */}
+          {minigame.combo >= 2 && (
+            <span style={{ color: '#fef08a', fontSize: '11px', fontFamily: 'var(--font-heading)', textShadow: '0 0 8px #facc15' }}>
+              ★ {minigame.combo}x COMBO!
+            </span>
+          )}
         </div>
 
         {/* Tension Pixel Blocks */}
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-          <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>TENSION:</span>
+          <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>TRIES:</span>
           {Array.from({ length: minigame.maxMisses }).map((_, i) => (
             <span
               key={i}
@@ -54,21 +78,43 @@ export const MinigameOverlay: React.FC<MinigameOverlayProps> = ({ minigame, onAc
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div className="exp-bar-bg" style={{ flex: 1, height: '14px' }}>
-          <div
-            className="exp-bar-fill"
-            style={{
-              width: `${progressPct}%`,
-              background: '#0284c7',
-              boxShadow: 'inset 0 -2px 0 0 #0369a1, inset 0 2px 0 0 #38bdf8'
-            }}
-          />
+      {/* Progress & Line Strain Bar */}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="exp-bar-bg" style={{ flex: 1, height: '14px' }}>
+            <div
+              className="exp-bar-fill"
+              style={{
+                width: `${progressPct}%`,
+                background: '#0284c7',
+                boxShadow: 'inset 0 -2px 0 0 #0369a1, inset 0 2px 0 0 #38bdf8'
+              }}
+            />
+          </div>
+          <span style={{ color: '#38bdf8', fontSize: '11px', fontFamily: 'var(--font-heading)', minWidth: '45px', textAlign: 'right' }}>
+            {minigame.currentSuccesses}/{minigame.requiredSuccesses}
+          </span>
         </div>
-        <span style={{ color: '#38bdf8', fontSize: '11px', fontFamily: 'var(--font-heading)', minWidth: '45px', textAlign: 'right' }}>
-          {minigame.currentSuccesses}/{minigame.requiredSuccesses}
-        </span>
+
+        {/* Line Strain Gauge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '9px', color: '#94a3b8', fontFamily: 'var(--font-heading)', minWidth: '70px' }}>
+            LINE STRAIN:
+          </span>
+          <div className="exp-bar-bg" style={{ flex: 1, height: '6px', background: '#09081a' }}>
+            <div
+              style={{
+                width: `${Math.min(100, minigame.tension || 10)}%`,
+                height: '100%',
+                background: (minigame.tension || 0) > 75 ? '#ef4444' : (minigame.tension || 0) > 45 ? '#f59e0b' : '#38bdf8',
+                transition: 'width 0.15s ease'
+              }}
+            />
+          </div>
+          <span style={{ fontSize: '9px', color: (minigame.tension || 0) > 75 ? '#ef4444' : '#94a3b8', fontFamily: 'var(--font-heading)', minWidth: '35px', textAlign: 'right' }}>
+            {Math.round(minigame.tension || 10)}%
+          </span>
+        </div>
       </div>
 
       {/* REELING TIMING TRACK */}

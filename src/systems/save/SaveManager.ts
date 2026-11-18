@@ -26,7 +26,14 @@ export const DEFAULT_SAVE: SaveData = {
   sfxVolume: 0.9,
   cameraSensitivity: 1.5,
   catBreed: 'celestial',
-  bgmTrack: 'space_sprinkles'
+  bgmTrack: 'space_sprinkles',
+  wishTokens: 3, // 3 starter wishes!
+  totalWishesMade: 0,
+  activeBlessings: [],
+  unlockedAccessories: ['charm_starlight_bell'],
+  equippedAccessories: {
+    charm: 'charm_starlight_bell'
+  }
 };
 
 export class SaveManager {
@@ -38,7 +45,15 @@ export class SaveManager {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed.playerLevel === 'number') {
-          this.data = { ...DEFAULT_SAVE, ...parsed };
+          this.data = {
+            ...DEFAULT_SAVE,
+            ...parsed,
+            wishTokens: typeof parsed.wishTokens === 'number' ? parsed.wishTokens : 3,
+            totalWishesMade: parsed.totalWishesMade || 0,
+            activeBlessings: Array.isArray(parsed.activeBlessings) ? parsed.activeBlessings : [],
+            unlockedAccessories: Array.isArray(parsed.unlockedAccessories) ? parsed.unlockedAccessories : ['charm_starlight_bell'],
+            equippedAccessories: parsed.equippedAccessories || { charm: 'charm_starlight_bell' }
+          };
           return this.data;
         }
       }

@@ -148,6 +148,8 @@ export class GameEngine2D {
       window.dispatchEvent(new CustomEvent('open-modal', { detail: 'collection' }));
     } else if (station.id === 'station_portal') {
       window.dispatchEvent(new CustomEvent('open-modal', { detail: 'regions' }));
+    } else if (station.id === 'station_wishing') {
+      window.dispatchEvent(new CustomEvent('open-modal', { detail: 'wishing' }));
     }
   }
 

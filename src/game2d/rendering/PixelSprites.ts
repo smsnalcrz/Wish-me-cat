@@ -1259,6 +1259,64 @@ export function generateRealmGatewaySprite(): HTMLCanvasElement {
   return canvas;
 }
 
+// Celestial Wishing Fountain (56x52)
+export function generateWishingFountainSprite(): HTMLCanvasElement {
+  const { canvas, ctx } = createPixelCanvas(56, 52);
+
+  // Soft Contact Drop Shadow
+  ctx.fillStyle = 'rgba(5, 3, 12, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(28, 46, 24, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer Basin Rim (Stone tiers)
+  ctx.fillStyle = '#1e1b4b'; // Deep void navy
+  ctx.fillRect(6, 28, 44, 18);
+  ctx.fillStyle = '#312e81'; // Midtone stone
+  ctx.fillRect(8, 26, 40, 4);
+
+  // Basin Stone Blocks & Glyphs
+  ctx.fillStyle = '#4338ca';
+  ctx.fillRect(10, 32, 36, 12);
+  ctx.fillStyle = '#38bdf8'; // Glowing ancient glyphs
+  ctx.fillRect(16, 36, 4, 3);
+  ctx.fillRect(26, 35, 4, 4);
+  ctx.fillRect(36, 36, 4, 3);
+
+  // Water Pool inside Basin
+  ctx.fillStyle = '#0369a1';
+  ctx.fillRect(10, 24, 36, 5);
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(12, 25, 32, 3);
+  ctx.fillStyle = '#fef08a'; // Glimmering coin/stardust reflections
+  ctx.fillRect(18, 26, 2, 2);
+  ctx.fillRect(28, 25, 2, 2);
+  ctx.fillRect(34, 26, 2, 2);
+
+  // Center Tiered Pillar Pedestal
+  ctx.fillStyle = '#1e1b4b';
+  ctx.fillRect(22, 14, 12, 14);
+  ctx.fillStyle = '#3730a3';
+  ctx.fillRect(24, 12, 8, 14);
+
+  // Upper Fountain Bowl
+  ctx.fillStyle = '#1e1b4b';
+  ctx.fillRect(18, 10, 20, 4);
+  ctx.fillStyle = '#4338ca';
+  ctx.fillRect(20, 8, 16, 3);
+  ctx.fillStyle = '#6366f1';
+  ctx.fillRect(22, 6, 12, 3);
+
+  // Overflow Cascading Starlight Water
+  ctx.fillStyle = '#7dd3fc';
+  ctx.fillRect(19, 12, 2, 13);
+  ctx.fillRect(35, 12, 2, 13);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(27, 4, 2, 8);
+
+  return canvas;
+}
+
 // Swimming Celestial Koi Sprite Sheet (4 Frames: 24x16 each)
 // Authored with Volumetric 3D Directional Shading (Dorsal Spine Highlight & Ventral Shadow)
 export function generateCelestialKoiSpriteSheet(): HTMLCanvasElement[] {
