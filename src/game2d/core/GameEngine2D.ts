@@ -35,6 +35,7 @@ export class GameEngine2D {
 
   private isRunning: boolean = false;
   private lastTime: number = 0;
+  private lastTouchTime: number = 0;
   private animFrameId: number | null = null;
   private callbacks: GameEngine2DCallbacks;
 
@@ -72,6 +73,7 @@ export class GameEngine2D {
 
   private setupListeners(): void {
     window.addEventListener('resize', this.handleResize);
+    window.addEventListener('orientationchange', this.handleResize);
 
     // Click and touch handler for interactions, cat petting, and minigames
     const handlePointerAction = (clientX: number, clientY: number) => {
@@ -97,12 +99,15 @@ export class GameEngine2D {
     };
 
     this.canvas.addEventListener('mousedown', (e) => {
+      // Suppress simulated compatibility mousedown events fired by mobile browsers after touchstart
+      if (performance.now() - this.lastTouchTime < 500) return;
       if (e.button === 0) {
         handlePointerAction(e.clientX, e.clientY);
       }
     });
 
     this.canvas.addEventListener('touchstart', (e) => {
+      this.lastTouchTime = performance.now();
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         handlePointerAction(touch.clientX, touch.clientY);
@@ -116,8 +121,9 @@ export class GameEngine2D {
 
   public resize(): void {
     if (!this.canvas) return;
-    const width = this.canvas.clientWidth || window.innerWidth;
-    const height = this.canvas.clientHeight || window.innerHeight;
+    const rect = this.canvas.parentElement?.getBoundingClientRect() || this.canvas.getBoundingClientRect();
+    const width = Math.floor(rect.width || window.innerWidth);
+    const height = Math.floor(rect.height || window.innerHeight);
 
     // Use device pixel ratio supporting up to 3x Retina Super XDR displays (iPhone 12/13/14/15/16 Pro)
     // Eliminates 1.5x fractional GPU upscaling blur and jagged stair-stepping
@@ -126,8 +132,8 @@ export class GameEngine2D {
 
     this.canvas.width = Math.round(width * dpr);
     this.canvas.height = Math.round(height * dpr);
-    this.canvas.style.width = `${width}px`;
-    this.canvas.style.height = `${height}px`;
+    this.canvas.style.width = '100%';
+    this.canvas.style.height = '100%';
 
     this.ctx.resetTransform();
     this.ctx.scale(dpr, dpr);
@@ -154,6 +160,7 @@ export class GameEngine2D {
   public destroy(): void {
     this.stop();
     window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('orientationchange', this.handleResize);
   }
 
   public setCatBreed(breed: CatBreed): void {

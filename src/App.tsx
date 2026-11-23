@@ -164,7 +164,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div className="game-root-viewport">
       {/* Pure 2D Pixel-Art Game Viewport */}
       <GameViewport2D
         gameState={gameState}
@@ -177,6 +177,8 @@ export const App: React.FC = () => {
         registerEngine={(eng) => { gameEngineRef.current = eng; }}
         currentRegionId={saveData.currentRegionId}
         catBreed={saveData.catBreed || 'celestial'}
+        equippedRodId={saveData.equippedRodId}
+        equippedAccessories={saveData.equippedAccessories}
         rodLevel={saveData.rodLevel}
       />
 
@@ -294,7 +296,10 @@ export const App: React.FC = () => {
         <CatWardrobeModal
           saveData={saveData}
           onClose={() => setActiveModal(null)}
-          onUpdateSave={setSaveData}
+          onUpdateSave={(newSave) => {
+            setSaveData(newSave);
+            gameEngineRef.current?.updateEquippedGear();
+          }}
           onSelectBreed={(breed) => {
             showToast('🐱 Cat Model Switched!', `You are now exploring as ${breed.toUpperCase()}!`);
           }}

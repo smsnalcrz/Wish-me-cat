@@ -164,7 +164,6 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
         {isExploring && interactionPrompt && (
           <button
             className="cosmic-button"
-            onTouchStart={(e) => { e.stopPropagation(); onInteract(); }}
             onClick={(e) => { e.stopPropagation(); onInteract(); }}
             style={{ padding: '12px 18px', background: '#0284c7', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
@@ -177,7 +176,6 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
         {isFishingMinigame && (
           <button
             className="cosmic-button"
-            onTouchStart={(e) => { e.stopPropagation(); onMinigameAction(); }}
             onClick={(e) => { e.stopPropagation(); onMinigameAction(); }}
             style={{ padding: '14px 22px', background: '#f59e0b', color: '#000', display: 'flex', alignItems: 'center', gap: '8px' }}
           >

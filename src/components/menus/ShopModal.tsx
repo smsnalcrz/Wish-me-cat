@@ -201,14 +201,10 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
             </div>
 
             {/* Item Showcase & Details Card */}
-            <div style={{
+            <div className="shop-showcase-grid" style={{
               background: '#0a081a',
               padding: '14px',
-              border: '2px solid #281f4a',
-              display: 'grid',
-              gridTemplateColumns: '140px 1fr',
-              gap: '16px',
-              alignItems: 'center'
+              border: '2px solid #281f4a'
             }}>
               {/* Visual Showcase Pedestal */}
               <div style={{
@@ -262,7 +258,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
                 </div>
 
                 {/* Stat Progression comparison */}
-                <div style={{ background: '#14102d', padding: '10px 12px', border: '1px solid #281f4a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ background: '#14102d', padding: '10px 12px', border: '1px solid #281f4a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <div style={{ fontSize: '9px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>CURRENT {data.statName.toUpperCase()}</div>
                     <div style={{ fontSize: '15px', fontFamily: 'var(--font-heading)', color: visual.accentColor }}>
@@ -286,7 +282,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
             </div>
 
             {/* Footer with Cost & Action */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <div style={{ fontSize: '9px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>UPGRADE COST:</div>
                 <div style={{ fontSize: '13px', fontFamily: 'var(--font-heading)', color: canAffordUpgrade ? '#fbbf24' : '#f43f5e', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -399,14 +395,10 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
             </div>
 
             {/* Selected Rod Inspection Panel */}
-            <div style={{
+            <div className="shop-showcase-grid" style={{
               background: '#0a081a',
               padding: '14px',
-              border: `2px solid ${rodRarityStyle.border}`,
-              display: 'grid',
-              gridTemplateColumns: '140px 1fr',
-              gap: '16px',
-              alignItems: 'center'
+              border: `2px solid ${rodRarityStyle.border}`
             }}>
               {/* Animated Pedestal */}
               <div style={{
@@ -529,7 +521,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
             </div>
 
             {/* Armory Action Footer */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <div style={{ fontSize: '9px', color: '#94a3b8', fontFamily: 'var(--font-heading)' }}>ROD STATUS:</div>
                 <div style={{ fontSize: '13px', fontFamily: 'var(--font-heading)', color: isSelectedUnlocked ? '#4ade80' : canAffordRod ? '#fbbf24' : '#f43f5e', display: 'flex', alignItems: 'center', gap: '6px' }}>

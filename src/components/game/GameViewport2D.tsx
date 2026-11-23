@@ -20,6 +20,8 @@ interface GameViewport2DProps {
   registerEngine?: (engine: GameEngine2D) => void;
   currentRegionId: string;
   catBreed?: CatBreed;
+  equippedRodId?: string;
+  equippedAccessories?: { hat?: string; cape?: string; charm?: string };
   rodLevel?: number;
 }
 
@@ -34,6 +36,8 @@ export const GameViewport2D: React.FC<GameViewport2DProps> = ({
   registerEngine,
   currentRegionId,
   catBreed = 'celestial',
+  equippedRodId,
+  equippedAccessories,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine2D | null>(null);
@@ -78,6 +82,13 @@ export const GameViewport2D: React.FC<GameViewport2DProps> = ({
       engineRef.current.setRegion(currentRegionId);
     }
   }, [currentRegionId]);
+
+  // Update equipped rod and accessories in real-time when changed
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.updateEquippedGear();
+    }
+  }, [equippedRodId, equippedAccessories]);
 
   return (
     <div className="game-viewport-2d">

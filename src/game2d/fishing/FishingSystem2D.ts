@@ -49,6 +49,7 @@ export class FishingSystem2D {
   private biteWaitTime: number = 3.5;
   private candidateCreature: CelestialCreature | null = null;
   private struggleTimer: number = 0;
+  private lastInputTime: number = 0;
 
   // Minigame
   public minigame: MinigameState2D = {
@@ -353,6 +354,11 @@ export class FishingSystem2D {
   // Handle Player Reeling Action (Click or Spacebar)
   public handleActionInput(): void {
     if (this.state !== 'minigame' || !this.candidateCreature) return;
+
+    // Debounce duplicate/synthetic taps across mobile touch and pointer events (prevents immediate miss)
+    const now = performance.now();
+    if (now - this.lastInputTime < 140) return;
+    this.lastInputTime = now;
 
     const cursor = this.minigame.cursor;
     const center = this.minigame.safeZoneCenter;

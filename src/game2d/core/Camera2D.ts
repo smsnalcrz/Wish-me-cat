@@ -7,7 +7,7 @@
 export class Camera2D {
   public x: number = 0;
   public y: number = 0;
-  public zoom: number = 2.5; // Pixel integer zoom ratio for crisp pixel art
+  public zoom: number = 2.0; // Pixel integer zoom ratio for crisp pixel art
 
   // Viewport dimensions
   public viewportWidth: number = 800;
@@ -31,6 +31,7 @@ export class Camera2D {
   constructor(viewportWidth: number, viewportHeight: number) {
     this.viewportWidth = viewportWidth;
     this.viewportHeight = viewportHeight;
+    this.resize(viewportWidth, viewportHeight);
   }
 
   public resize(width: number, height: number): void {
