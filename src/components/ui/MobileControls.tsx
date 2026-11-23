@@ -117,24 +117,26 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
           onTouchStart={handleJoystickTouchStart}
           style={{
             position: 'absolute',
-            bottom: '30px',
-            left: '30px',
-            width: '120px',
-            height: '120px',
-            background: '#09081a',
-            border: '2px solid #281f4a',
+            bottom: 'max(20px, calc(12px + env(safe-area-inset-bottom, 12px)))',
+            left: 'max(20px, calc(12px + env(safe-area-inset-left, 12px)))',
+            width: '110px',
+            height: '110px',
+            background: 'rgba(9, 8, 26, 0.85)',
+            border: '2px solid #38bdf8',
+            boxShadow: '0 0 16px rgba(56, 189, 248, 0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            pointerEvents: 'auto'
+            pointerEvents: 'auto',
+            touchAction: 'none'
           }}
         >
           <div
             style={{
               position: 'absolute',
               transform: `translate(${knobPos.x}px, ${knobPos.y}px)`,
-              width: '44px',
-              height: '44px',
+              width: '42px',
+              height: '42px',
               background: isJoystickActive ? '#38bdf8' : '#1e1b4b',
               boxShadow: isJoystickActive
                 ? '0 -2px 0 0 #7dd3fc, 0 2px 0 0 #0284c7, -2px 0 0 0 #7dd3fc, 2px 0 0 0 #0284c7'
@@ -149,12 +151,13 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
         className="pointer-events-auto"
         style={{
           position: 'absolute',
-          bottom: '30px',
-          right: '30px',
+          bottom: 'max(20px, calc(12px + env(safe-area-inset-bottom, 12px)))',
+          right: 'max(20px, calc(12px + env(safe-area-inset-right, 12px)))',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
-          alignItems: 'flex-end'
+          alignItems: 'flex-end',
+          touchAction: 'none'
         }}
       >
         {/* Primary Interact / Cast Button */}

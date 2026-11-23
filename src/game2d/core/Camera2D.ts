@@ -37,13 +37,12 @@ export class Camera2D {
     this.viewportWidth = width;
     this.viewportHeight = height;
 
-    // Adapt zoom based on screen size (keeps pixel art scale consistent on desktop and mobile)
-    if (width < 600 || height < 500) {
-      this.zoom = 2.0;
-    } else if (width > 1600) {
-      this.zoom = 3.0;
+    // Integer zoom ratio ensures 100% pixel-perfect edges on all mobile and desktop screens.
+    // Eliminates fractional (2.5x) scaling that causes jagged pixel shimmering on Retina/OLED displays.
+    if (width < 1350 || height < 750) {
+      this.zoom = 2.0; // Clean 2x integer scale for mobile phones, tablets, and small laptops
     } else {
-      this.zoom = 2.5;
+      this.zoom = 3.0; // Clean 3x integer scale for large desktop / 4K displays
     }
   }
 
@@ -82,17 +81,21 @@ export class Camera2D {
     }
   }
 
-  // World to Screen transformation
+  // World to Screen transformation with integer-aligned viewport center to prevent sub-pixel jitter
   public worldToScreen(worldX: number, worldY: number): { x: number; y: number } {
-    const screenX = (worldX - this.x + this.shakeOffsetX) * this.zoom + this.viewportWidth / 2;
-    const screenY = (worldY - this.y + this.shakeOffsetY) * this.zoom + this.viewportHeight / 2;
-    return { x: Math.floor(screenX), y: Math.floor(screenY) };
+    const halfW = Math.floor(this.viewportWidth / 2);
+    const halfH = Math.floor(this.viewportHeight / 2);
+    const screenX = Math.round((worldX - this.x + this.shakeOffsetX) * this.zoom) + halfW;
+    const screenY = Math.round((worldY - this.y + this.shakeOffsetY) * this.zoom) + halfH;
+    return { x: screenX, y: screenY };
   }
 
   // Screen to World transformation (e.g. mouse click or touch to world coordinates)
   public screenToWorld(screenX: number, screenY: number): { x: number; y: number } {
-    const worldX = (screenX - this.viewportWidth / 2) / this.zoom + this.x;
-    const worldY = (screenY - this.viewportHeight / 2) / this.zoom + this.y;
+    const halfW = Math.floor(this.viewportWidth / 2);
+    const halfH = Math.floor(this.viewportHeight / 2);
+    const worldX = (screenX - halfW) / this.zoom + this.x;
+    const worldY = (screenY - halfH) / this.zoom + this.y;
     return { x: worldX, y: worldY };
   }
 }

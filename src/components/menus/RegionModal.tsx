@@ -56,7 +56,7 @@ export const RegionModal: React.FC<RegionModalProps> = ({ saveData, onClose, onU
           <button className="close-btn" onClick={onClose}><PixelCloseIcon size={18} /></button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '14px', marginTop: '6px' }}>
+        <div className="responsive-card-grid" style={{ marginTop: '6px' }}>
           {REGIONS.map((region) => {
             const isUnlocked = saveData.unlockedRegionIds.includes(region.id);
             const isCurrent = saveData.currentRegionId === region.id;

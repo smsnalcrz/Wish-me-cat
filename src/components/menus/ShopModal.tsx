@@ -315,7 +315,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ saveData, onClose, onUpdat
             {/* Rods Grid Selector */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(6, 1fr)',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
               gap: '6px',
               marginBottom: '10px'
             }}>

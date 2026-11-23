@@ -303,10 +303,7 @@ export const CatWardrobeModal: React.FC<CatWardrobeModalProps> = ({
 
         {/* TAB 1: FELINE BREEDS */}
         {activeTab === 'breeds' && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '12px',
+          <div className="responsive-card-grid" style={{
             maxHeight: '48vh',
             overflowY: 'auto',
             padding: '4px'
@@ -462,10 +459,7 @@ export const CatWardrobeModal: React.FC<CatWardrobeModalProps> = ({
             </div>
 
             {/* Accessories Grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-              gap: '12px',
+            <div className="responsive-card-grid" style={{
               maxHeight: '44vh',
               overflowY: 'auto',
               padding: '4px'

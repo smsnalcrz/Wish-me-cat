@@ -119,10 +119,15 @@ export class GameEngine2D {
     const width = this.canvas.clientWidth || window.innerWidth;
     const height = this.canvas.clientHeight || window.innerHeight;
 
-    // Use device pixel ratio for super-crisp high-DPI rendering
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = Math.floor(width * dpr);
-    this.canvas.height = Math.floor(height * dpr);
+    // Use device pixel ratio supporting up to 3x Retina Super XDR displays (iPhone 12/13/14/15/16 Pro)
+    // Eliminates 1.5x fractional GPU upscaling blur and jagged stair-stepping
+    const rawDpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(Math.max(rawDpr, 1), 3);
+
+    this.canvas.width = Math.round(width * dpr);
+    this.canvas.height = Math.round(height * dpr);
+    this.canvas.style.width = `${width}px`;
+    this.canvas.style.height = `${height}px`;
 
     this.ctx.resetTransform();
     this.ctx.scale(dpr, dpr);
@@ -234,6 +239,11 @@ export class GameEngine2D {
   private render(time: number): void {
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
+
+    // Enforce crisp pixel art nearest-neighbor rendering on every frame (prevents iOS Safari reset)
+    if (this.ctx.imageSmoothingEnabled) {
+      this.ctx.imageSmoothingEnabled = false;
+    }
 
     this.ctx.clearRect(0, 0, width, height);
 

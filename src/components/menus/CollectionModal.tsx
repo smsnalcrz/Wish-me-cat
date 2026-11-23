@@ -38,9 +38,9 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ saveData, onCl
         </div>
 
         {/* Content Body: Left Grid & Right Inspector */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px' }}>
+        <div className="modal-two-col">
           {/* Left Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
             {CREATURES.map((creature) => {
               const discovered = saveData.discoveredCreatureIds.includes(creature.id);
               const isSelected = selectedCreature.id === creature.id;
