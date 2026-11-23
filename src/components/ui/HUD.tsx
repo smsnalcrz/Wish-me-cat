@@ -2,6 +2,7 @@ import React from 'react';
 import { SaveData } from '../../types/game';
 import { REGIONS } from '../../data/regions';
 import { QUESTS } from '../../data/quests';
+import { getEquippedRod } from '../../data/equipment';
 import {
   PixelStardustIcon,
   PixelCatIcon,
@@ -51,6 +52,7 @@ export const HUD: React.FC<HUDProps> = ({
   const expProgress = Math.min(100, Math.round((saveData.playerExp / Math.max(1, requiredExp)) * 100));
 
   const currentRegion = REGIONS.find(r => r.id === saveData.currentRegionId) || REGIONS[0];
+  const equippedRod = getEquippedRod(saveData);
 
   // Active uncompleted quest
   const activeQuest = QUESTS.find(q => !saveData.claimedQuestIds.includes(q.id));
@@ -97,40 +99,85 @@ export const HUD: React.FC<HUDProps> = ({
 
           <div className="quick-buttons pointer-events-auto">
             <button
-              className="icon-button"
+              className="quick-action-btn"
               onClick={onOpenWishing}
-              title="Celestial Wishing Fountain (Make Wishes & Buffs)"
-              style={{ background: '#3b0764', borderColor: '#a855f7' }}
+              title="Wishing Fountain (Buffs & Wishes)"
             >
-              <span style={{ fontSize: '18px' }}>🌟</span>
+              <div className="quick-action-icon"><span style={{ fontSize: '16px' }}>🌟</span></div>
+              <span className="quick-action-label">WISH</span>
+              <span className="quick-action-tooltip">Wishing Fountain</span>
             </button>
-            <button className="icon-button" onClick={onOpenWardrobe} title="Cat Wardrobe (Change Breed)">
-              <img
-                src={`/assets/character/${saveData.catBreed || 'celestial'}/CharacterPortraits/icon.png`}
-                alt="Cat Wardrobe"
-                style={{ width: '22px', height: '22px', imageRendering: 'pixelated', objectFit: 'contain' }}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+            <button
+              className="quick-action-btn"
+              onClick={onOpenWardrobe}
+              title="Cat Wardrobe (Change Breed & Outfits)"
+            >
+              <div className="quick-action-icon">
+                <img
+                  src={`/assets/character/${saveData.catBreed || 'celestial'}/CharacterPortraits/icon.png`}
+                  alt="Cat Wardrobe"
+                  style={{ width: '20px', height: '20px', imageRendering: 'pixelated', objectFit: 'contain' }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+              <span className="quick-action-label">CAT</span>
+              <span className="quick-action-tooltip">Cat Wardrobe</span>
             </button>
-            <button className="icon-button" onClick={onOpenShop} title="Cosmic Gear Emporium">
-              <PixelShopIcon size={20} />
+            <button
+              className="quick-action-btn"
+              onClick={onOpenShop}
+              title="Cosmic Gear Emporium & Rod Armory"
+            >
+              <div className="quick-action-icon"><PixelShopIcon size={18} /></div>
+              <span className="quick-action-label">SHOP</span>
+              <span className="quick-action-tooltip">Gear & Armory</span>
             </button>
-            <button className="icon-button" onClick={onOpenCollection} title="Star Almanac">
-              <PixelAlmanacIcon size={20} />
+            <button
+              className="quick-action-btn"
+              onClick={onOpenCollection}
+              title="Star Almanac (Fish Species Catalog)"
+            >
+              <div className="quick-action-icon"><PixelAlmanacIcon size={18} /></div>
+              <span className="quick-action-label">ALMANAC</span>
+              <span className="quick-action-tooltip">Star Almanac</span>
             </button>
-            <button className="icon-button" onClick={onOpenConstellations} title="Constellation Altar">
-              <PixelConstellationIcon size={20} />
+            <button
+              className="quick-action-btn"
+              onClick={onOpenConstellations}
+              title="Constellation Altar (Sky Map & Lore)"
+            >
+              <div className="quick-action-icon"><PixelConstellationIcon size={18} /></div>
+              <span className="quick-action-label">STARS</span>
+              <span className="quick-action-tooltip">Constellations</span>
             </button>
-            <button className="icon-button" onClick={onOpenRegions} title="Cosmic Realm Gateway">
-              <PixelRegionIcon size={20} />
+            <button
+              className="quick-action-btn"
+              onClick={onOpenRegions}
+              title="Cosmic Realm Gateway (Travel to Regions)"
+            >
+              <div className="quick-action-icon"><PixelRegionIcon size={18} /></div>
+              <span className="quick-action-label">REALMS</span>
+              <span className="quick-action-tooltip">Realm Travel</span>
             </button>
-            <button className="icon-button" onClick={onToggleMute} title={isMuted ? "Unmute Audio" : "Mute Audio"}>
-              <PixelAudioIcon size={20} isMuted={isMuted} />
+            <button
+              className="quick-action-btn"
+              onClick={onToggleMute}
+              title={isMuted ? "Unmute Audio (BGM & SFX)" : "Mute Audio"}
+            >
+              <div className="quick-action-icon"><PixelAudioIcon size={18} isMuted={isMuted} /></div>
+              <span className="quick-action-label">{isMuted ? 'MUTED' : 'AUDIO'}</span>
+              <span className="quick-action-tooltip">{isMuted ? 'Unmute Audio' : 'Mute Audio'}</span>
             </button>
-            <button className="icon-button" onClick={onOpenPause} title="Pause Menu">
-              <PixelPauseIcon size={20} />
+            <button
+              className="quick-action-btn"
+              onClick={onOpenPause}
+              title="System Pause & Controls Guide"
+            >
+              <div className="quick-action-icon"><PixelPauseIcon size={18} /></div>
+              <span className="quick-action-label">MENU</span>
+              <span className="quick-action-tooltip">Game Menu</span>
             </button>
           </div>
         </div>
@@ -174,14 +221,7 @@ export const HUD: React.FC<HUDProps> = ({
         </div>
       )}
 
-      {/* Center Dynamic Interaction Prompt */}
-      {interactionPrompt && (
-        <div style={{ alignSelf: 'center', marginBottom: '20px' }}>
-          <div className="prompt-banner pointer-events-auto" onClick={onInteract}>
-            {interactionPrompt}
-          </div>
-        </div>
-      )}
+      {/* In-world station pill handles interaction prompt seamlessly on canvas without HUD collision */}
 
       {/* Bottom HUD */}
       <div className="hud-bottom">
@@ -193,7 +233,7 @@ export const HUD: React.FC<HUDProps> = ({
           </div>
           <div className="gear-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <PixelFishingRodIcon size={14} />
-            <span>Starlight Caster (Lv.{saveData.rodLevel})</span>
+            <span>{equippedRod.name} (Lv.{saveData.rodLevel})</span>
           </div>
         </div>
 

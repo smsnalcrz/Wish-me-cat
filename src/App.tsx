@@ -148,7 +148,14 @@ export const App: React.FC = () => {
   };
 
   const handleTravelToRegion = (region: RegionData) => {
-    showToast('TRAVELED TO REGION', `Welcome to ${region.name}!`);
+    const newSave = {
+      ...saveData,
+      currentRegionId: region.id
+    };
+    SaveManager.save(newSave);
+    setSaveData(newSave);
+    gameEngineRef.current?.setRegion(region.id);
+    showToast('REALM TRAVEL', `Entered ${region.name}!`);
   };
 
   const toggleMute = () => {
@@ -245,7 +252,10 @@ export const App: React.FC = () => {
         <ShopModal
           saveData={saveData}
           onClose={() => setActiveModal(null)}
-          onUpdateSave={setSaveData}
+          onUpdateSave={(newSave) => {
+            setSaveData(newSave);
+            gameEngineRef.current?.updateEquippedGear();
+          }}
         />
       )}
 

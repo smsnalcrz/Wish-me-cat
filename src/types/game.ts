@@ -54,6 +54,27 @@ export interface EquipmentData {
   statUnit: string;
 }
 
+export interface RodModelData {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  cost: number;
+  rarity: CreatureRarity;
+  spriteUrl: string;
+  lineColor: string;
+  rodColor: string;
+  passiveTitle: string;
+  passiveDesc: string;
+  bonusCastRangePct?: number;
+  bonusSafeZonePct?: number;
+  bonusBiteSpeedPct?: number;
+  bonusRareWeightPct?: number;
+  bonusStardustPct?: number;
+  bonusExpPct?: number;
+  bonusTensionHearts?: number;
+}
+
 export interface RegionData {
   id: string;
   name: string;
@@ -134,6 +155,8 @@ export interface SaveData {
     cape?: string;
     charm?: string;
   };
+  unlockedRodIds?: string[];
+  equippedRodId?: string;
 }
 
 export type BlessingType = 

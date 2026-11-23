@@ -93,19 +93,26 @@ export class Bobber2D {
   }
 
   // Draw 2D Fishing Line connecting Rod Tip to Bobber
-  public renderLine(ctx: CanvasRenderingContext2D, camera: Camera2D, rodTipX: number, rodTipY: number): void {
+  public renderLine(ctx: CanvasRenderingContext2D, camera: Camera2D, rodTipX: number, rodTipY: number, lineColor?: string): void {
     if (!this.isVisible) return;
 
     const tipScreen = camera.worldToScreen(rodTipX, rodTipY);
     const bobScreen = camera.worldToScreen(this.x, this.y);
 
     ctx.save();
-    ctx.strokeStyle = '#93c5fd';
+    ctx.strokeStyle = lineColor || '#93c5fd';
     ctx.lineWidth = Math.max(1, 1.2 * camera.zoom);
 
-    // Quadratic curve for natural line sag
+    // Quadratic curve with dynamic tension sag: loose when floating, taut & vibrating under bite/reel
+    let sag = 8 * camera.zoom;
+    if (this.isReeling) {
+      sag = 2 * camera.zoom + Math.sin(performance.now() * 0.05) * 1.5 * camera.zoom;
+    } else if (this.isBiting) {
+      sag = 3 * camera.zoom + Math.sin(performance.now() * 0.08) * 2 * camera.zoom;
+    }
+
     const midX = (tipScreen.x + bobScreen.x) / 2;
-    const midY = (tipScreen.y + bobScreen.y) / 2 + (this.isInWater ? 8 * camera.zoom : -6 * camera.zoom);
+    const midY = (tipScreen.y + bobScreen.y) / 2 + (this.isInWater ? sag : -6 * camera.zoom);
 
     ctx.beginPath();
     ctx.moveTo(tipScreen.x, tipScreen.y);

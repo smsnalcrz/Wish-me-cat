@@ -23,6 +23,13 @@
   padding: 0;
   user-select: none;
   image-rendering: pixelated;
+  line-height: 1.4;
+}
+
+/* Global Heading & Pixel Typography Safety */
+h1, h2, h3, h4, .modal-title, [style*="--font-heading"], [style*="Press Start 2P"] {
+  line-height: 1.5;
+  letter-spacing: 0.5px;
 }
 
 body, html, #root {
@@ -152,11 +159,103 @@ body, html, #root {
   color: var(--color-accent-gold);
 }
 
-/* Quick Action Navigation Buttons */
+/* Quick Action Navigation Buttons & Mobile Touch Targets */
 .quick-buttons {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
+}
+
+.quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 3px 5px;
+  background: #1e1846;
+  border: 1px solid #3d2f7a;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 0 0 #0c091f;
+}
+
+.quick-action-btn:hover {
+  background: #32286e;
+  border-color: #818cf8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 0 #0c091f;
+}
+
+.quick-action-btn:active {
+  transform: translateY(1px);
+  background: #140f32;
+  box-shadow: 0 1px 0 0 #0c091f;
+}
+
+.quick-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+}
+
+.quick-action-label {
+  font-family: var(--font-heading);
+  font-size: 8px;
+  color: #cbd5e1;
+  margin-top: 2px;
+  letter-spacing: 0.4px;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.quick-action-btn:hover .quick-action-label {
+  color: #fef08a;
+}
+
+/* Floating Tooltip for Desktop Hover */
+.quick-action-tooltip {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #070514;
+  border: 1px solid #38bdf8;
+  color: #fef08a;
+  font-family: var(--font-heading);
+  font-size: 9px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quick-action-btn:hover .quick-action-tooltip {
+    display: block;
+    animation: tooltipFadeIn 0.15s ease-out;
+  }
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 .icon-button {
@@ -383,6 +482,7 @@ body, html, #root {
   justify-content: center;
   z-index: 100;
   pointer-events: auto;
+  animation: modalBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .modal-card {
@@ -395,6 +495,98 @@ body, html, #root {
   flex-direction: column;
   gap: 16px;
   border-radius: 0 !important;
+  background: var(--color-panel-bg);
+  box-shadow:
+    0 -4px 0 0 #3b2c68,
+    0 4px 0 0 #070514,
+    -4px 0 0 0 #3b2c68,
+    4px 0 0 0 #070514,
+    0 -2px 0 3px #6366f1,
+    0 2px 0 3px #1e1b4b,
+    -2px 0 0 3px #6366f1,
+    2px 0 0 3px #1e1b4b,
+    0 0 24px rgba(99, 102, 241, 0.25);
+  position: relative;
+  animation: modalCardPopIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalCardPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes gearFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(1.5deg);
+  }
+}
+
+@keyframes gearGlowPulse {
+  0%, 100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+.modal-card::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  border: 1px dashed rgba(254, 240, 138, 0.2);
+  pointer-events: none;
+}
+
+/* Kenney CC0 Pixel UI 9-Slice Enhancements */
+.kenney-frame {
+  border-style: solid;
+  border-width: 12px;
+  border-image-source: url('/assets/kenney/fantasy-ui-borders/PNG/Default/Panel/panel-000.png');
+  border-image-slice: 16 fill;
+  border-image-repeat: repeat;
+  image-rendering: pixelated;
+}
+
+.kenney-pixel-space {
+  border-style: solid;
+  border-width: 12px;
+  border-image-source: url('/assets/kenney/pixel-ui-pack/9-Slice/space.png');
+  border-image-slice: 16 fill;
+  border-image-repeat: repeat;
+  image-rendering: pixelated;
+}
+
+.kenney-pixel-slot {
+  border-style: solid;
+  border-width: 8px;
+  border-image-source: url('/assets/kenney/pixel-ui-pack/9-Slice/space_inlay.png');
+  border-image-slice: 16 fill;
+  border-image-repeat: repeat;
+  image-rendering: pixelated;
 }
 
 .modal-header {
@@ -463,11 +655,110 @@ body, html, #root {
 
 /* Rarity Badges (Stepped Pixel Style) */
 .rarity-badge {
-  padding: 2px 8px;
+  padding: 3px 8px;
   font-family: var(--font-heading);
   font-size: 9px;
   text-transform: uppercase;
   border: 1px solid;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  display: inline-block;
+}
+
+/* Pixel Button Utility Classes */
+.pixel-btn {
+  border: none;
+  font-family: var(--font-heading);
+  cursor: pointer;
+  transition: transform 0.05s step-end, background-color 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.5px;
+  outline: none;
+  line-height: 1.3;
+}
+
+.pixel-btn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+.pixel-btn.btn-primary {
+  background: #6366f1;
+  color: #ffffff;
+  box-shadow:
+    0 -2px 0 0 #818cf8,
+    0 3px 0 0 #312e81,
+    -2px 0 0 0 #818cf8,
+    2px 0 0 0 #312e81;
+}
+
+.pixel-btn.btn-primary:hover:not(:disabled) {
+  background: #4f46e5;
+  box-shadow:
+    0 -2px 0 0 #a5b4fc,
+    0 3px 0 0 #1e1b4b,
+    -2px 0 0 0 #a5b4fc,
+    2px 0 0 0 #1e1b4b;
+}
+
+.pixel-btn.btn-secondary {
+  background: #1e1b4b;
+  color: #cbd5e1;
+  box-shadow:
+    0 -2px 0 0 #3730a3,
+    0 2px 0 0 #0f172a,
+    -2px 0 0 0 #3730a3,
+    2px 0 0 0 #0f172a;
+}
+
+.pixel-btn.btn-secondary:hover:not(:disabled) {
+  background: #2e2870;
+  color: #ffffff;
+  box-shadow:
+    0 -2px 0 0 #4f46e5,
+    0 2px 0 0 #0f172a,
+    -2px 0 0 0 #4f46e5,
+    2px 0 0 0 #0f172a;
+}
+
+/* Pixel Tab Navigation */
+.pixel-tab-btn {
+  padding: 8px 16px;
+  font-size: 10px;
+  font-family: var(--font-heading);
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  transition: all 0.05s step-end;
+}
+
+.pixel-tab-btn.active {
+  background: #38bdf8;
+  color: #09081a;
+  box-shadow:
+    0 -2px 0 0 #7dd3fc,
+    0 3px 0 0 #0369a1,
+    -2px 0 0 0 #7dd3fc,
+    2px 0 0 0 #0369a1;
+}
+
+.pixel-tab-btn:not(.active) {
+  background: #1e1b4b;
+  color: #94a3b8;
+  box-shadow:
+    0 -2px 0 0 #312e81,
+    0 2px 0 0 #0f172a,
+    -2px 0 0 0 #312e81,
+    2px 0 0 0 #0f172a;
+}
+
+.pixel-tab-btn:not(.active):hover {
+  background: #2a2468;
+  color: #f8fafc;
 }
 
 .rarity-common { background: #1e293b; color: #cbd5e1; border-color: #475569; }
@@ -719,4 +1010,258 @@ body, html, #root {
 
 .icon-setting-btn:hover {
   color: #f8fafc;
+}
+
+/* ==========================================================================
+   CELESTIAL GACHA ROLLING ANIMATION
+   ========================================================================== */
+
+.gacha-stage {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  background: radial-gradient(circle at 50% 50%, #15103a 0%, #070514 85%);
+  border: 2px solid #3b2c68;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+}
+
+.gacha-skip-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #6366f1;
+  color: #f8fafc;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  padding: 6px 14px;
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.1s step-end;
+}
+
+.gacha-skip-btn:hover {
+  background: #4f46e5;
+  color: #fef08a;
+  transform: translateY(-1px);
+}
+
+/* Meteor Streaking Animation */
+.gacha-meteor-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gacha-meteor {
+  position: absolute;
+  top: 15%;
+  right: 12%;
+  width: 180px;
+  height: 6px;
+  border-radius: 999px;
+  transform: rotate(-35deg);
+  animation: meteor-flight 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  filter: drop-shadow(0 0 16px currentColor);
+}
+
+.gacha-meteor-head {
+  position: absolute;
+  left: 0;
+  top: -6px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 24px 8px currentColor;
+}
+
+@keyframes meteor-flight {
+  0% {
+    transform: translate(250px, -200px) rotate(-35deg) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-300px, 260px) rotate(-35deg) scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Impact Flash */
+.gacha-impact-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(254, 240, 138, 0.6) 30%, transparent 75%);
+  animation: impact-fade 0.6s ease-out forwards;
+  pointer-events: none;
+  z-index: 30;
+}
+
+@keyframes impact-fade {
+  0% { opacity: 1; transform: scale(0.6); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* Rotating Sunburst Rays for Legendary/Epic Drops */
+.gacha-sunburst {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(250, 204, 21, 0.25) 0deg 20deg,
+    transparent 20deg 40deg,
+    rgba(250, 204, 21, 0.25) 40deg 60deg,
+    transparent 60deg 80deg,
+    rgba(250, 204, 21, 0.25) 80deg 100deg,
+    transparent 100deg 120deg,
+    rgba(250, 204, 21, 0.25) 120deg 140deg,
+    transparent 140deg 160deg,
+    rgba(250, 204, 21, 0.25) 160deg 180deg,
+    transparent 180deg 200deg,
+    rgba(250, 204, 21, 0.25) 200deg 220deg,
+    transparent 220deg 240deg,
+    rgba(250, 204, 21, 0.25) 240deg 260deg,
+    transparent 260deg 280deg,
+    rgba(250, 204, 21, 0.25) 280deg 300deg,
+    transparent 300deg 320deg,
+    rgba(250, 204, 21, 0.25) 320deg 340deg,
+    transparent 340deg 360deg
+  );
+  border-radius: 50%;
+  animation: sunburst-spin 12s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes sunburst-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Single Reward Reveal Card */
+.gacha-reveal-card {
+  position: relative;
+  width: 290px;
+  padding: 24px 20px;
+  background: #09081a;
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.8);
+  animation: card-pop-in 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  z-index: 10;
+}
+
+@keyframes card-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotateY(-70deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+  }
+}
+
+/* 10-Pull Sequential Reel Grid */
+.gacha-tenfold-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 680px;
+  z-index: 10;
+}
+
+@media (max-width: 640px) {
+  .gacha-tenfold-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.gacha-slot-card {
+  background: #09081a;
+  border: 1px solid #312e81;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  min-height: 110px;
+  justify-content: space-between;
+}
+
+.gacha-slot-card.revealed {
+  animation: slot-reveal 0.35s ease-out forwards;
+}
+
+.gacha-slot-card.unrevealed {
+  background: #110d29;
+  border: 1px dashed #4338ca;
+  cursor: pointer;
+}
+
+.gacha-slot-card.unrevealed:hover {
+  background: #1e1744;
+  border-color: #6366f1;
+  transform: translateY(-2px);
+}
+
+@keyframes slot-reveal {
+  0% { transform: scale(0.7) rotateY(90deg); opacity: 0; }
+  100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+}
+
+/* Mobile & Touch Responsive HUD Adjustments */
+@media (max-width: 768px) {
+  .hud-top {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .hud-top > div:last-child {
+    justify-content: space-between;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .quick-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+
+  .quick-action-btn {
+    min-width: 38px;
+    height: 40px;
+    padding: 2px 4px;
+  }
+
+  .quick-action-label {
+    font-size: 7px;
+  }
+
+  .exp-container {
+    min-width: 110px;
+  }
 }

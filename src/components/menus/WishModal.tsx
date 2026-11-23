@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import confetti from 'canvas-confetti';
 import { SaveData, WishReward, CatAccessoryType } from '../../types/game';
 import {
   WishManager,
@@ -24,12 +25,16 @@ export const WishModal: React.FC<WishModalProps> = ({
   onClose,
   onUpdateSave
 }) => {
+  type GachaPhase = 'idle' | 'meteor' | 'burst' | 'reveal' | 'summary';
   const [activeTab, setActiveTab] = useState<'wish' | 'blessings' | 'wardrobe'>('wish');
-  const [isWishing, setIsWishing] = useState(false);
-  const [wishResults, setWishResults] = useState<WishReward[] | null>(null);
+  const [gachaPhase, setGachaPhase] = useState<GachaPhase>('idle');
+  const [currentRewards, setCurrentRewards] = useState<WishReward[]>([]);
+  const [highestRarity, setHighestRarity] = useState<string>('common');
+  const [revealedCount, setRevealedCount] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [, setTimerTick] = useState(0);
 
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const audio = AudioManager.getInstance();
 
   // Tick active blessings countdown every second
@@ -37,12 +42,48 @@ export const WishModal: React.FC<WishModalProps> = ({
     const timer = setInterval(() => {
       setTimerTick(t => t + 1);
     }, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      timersRef.current.forEach(t => clearTimeout(t));
+      timersRef.current = [];
+    };
   }, []);
 
   const activeBlessings = WishManager.getActiveBlessings();
   const unlockedAccSet = new Set(saveData.unlockedAccessories || []);
   const equipped = saveData.equippedAccessories || {};
+
+  const getHighestRarity = (rewards: WishReward[]): string => {
+    const ranks: Record<string, number> = {
+      mythic: 5,
+      legendary: 4,
+      epic: 3,
+      rare: 2,
+      uncommon: 1,
+      common: 0
+    };
+    let highest = 'common';
+    let maxRank = 0;
+    rewards.forEach(r => {
+      const rank = ranks[r.rarity] || 0;
+      if (rank > maxRank) {
+        maxRank = rank;
+        highest = r.rarity;
+      }
+    });
+    return highest;
+  };
+
+  const getRarityColor = (rarity: string): string => {
+    switch (rarity) {
+      case 'mythic': return '#f43f5e';
+      case 'legendary': return '#facc15';
+      case 'epic': return '#c084fc';
+      case 'rare': return '#38bdf8';
+      case 'uncommon': return '#4ade80';
+      default: return '#94a3b8';
+    }
+  };
 
   const handleSingleWish = (useTokens: boolean) => {
     setErrorMessage(null);
@@ -53,15 +94,44 @@ export const WishModal: React.FC<WishModalProps> = ({
       return;
     }
 
-    setIsWishing(true);
-    audio.playLevelUp();
+    // Immediately synchronize React state so currency deduction is visible right away!
+    onUpdateSave({ ...SaveManager.getData() });
 
-    setTimeout(() => {
-      setIsWishing(false);
-      setWishResults([res.reward]);
-      audio.playCatchCelebration(res.reward.rarity);
-      onUpdateSave({ ...SaveManager.getData() });
-    }, 900);
+    timersRef.current.forEach(t => clearTimeout(t));
+    timersRef.current = [];
+
+    const reward = res.reward;
+    const maxR = reward.rarity;
+    setCurrentRewards([reward]);
+    setHighestRarity(maxR);
+    setRevealedCount(0);
+    setGachaPhase('meteor');
+    audio.playGachaMeteorLaunch(maxR);
+
+    // Meteor impacts at 1350ms
+    const t1 = setTimeout(() => {
+      setGachaPhase('burst');
+      audio.playGachaImpact();
+      if (maxR === 'legendary' || maxR === 'epic') {
+        confetti({
+          particleCount: maxR === 'legendary' ? 80 : 45,
+          spread: 75,
+          origin: { y: 0.55 },
+          colors: maxR === 'legendary' ? ['#facc15', '#fef08a', '#fb923c'] : ['#c084fc', '#e879f9', '#38bdf8']
+        });
+      }
+
+      // Transition to card reveal at 1750ms
+      const t2 = setTimeout(() => {
+        setGachaPhase('reveal');
+        setRevealedCount(1);
+        audio.playCatchCelebration(maxR);
+      }, 400);
+
+      timersRef.current.push(t2);
+    }, 1350);
+
+    timersRef.current.push(t1);
   };
 
   const handleTenfoldWish = (useTokens: boolean) => {
@@ -73,15 +143,70 @@ export const WishModal: React.FC<WishModalProps> = ({
       return;
     }
 
-    setIsWishing(true);
-    audio.playLevelUp();
+    // Immediately synchronize React state so currency deduction is visible right away!
+    onUpdateSave({ ...SaveManager.getData() });
 
-    setTimeout(() => {
-      setIsWishing(false);
-      setWishResults(res.rewards);
-      audio.playCatchCelebration('legendary');
-      onUpdateSave({ ...SaveManager.getData() });
-    }, 1200);
+    timersRef.current.forEach(t => clearTimeout(t));
+    timersRef.current = [];
+
+    const rewards = res.rewards;
+    const maxR = getHighestRarity(rewards);
+    setCurrentRewards(rewards);
+    setHighestRarity(maxR);
+    setRevealedCount(0);
+    setGachaPhase('meteor');
+    audio.playGachaMeteorLaunch(maxR);
+
+    // Meteor impacts at 1350ms
+    const t1 = setTimeout(() => {
+      setGachaPhase('burst');
+      audio.playGachaImpact();
+      if (maxR === 'legendary' || maxR === 'epic') {
+        confetti({
+          particleCount: 90,
+          spread: 85,
+          origin: { y: 0.55 },
+          colors: ['#facc15', '#c084fc', '#38bdf8', '#f472b6']
+        });
+      }
+
+      // Transition to sequential reveal at 1750ms
+      const t2 = setTimeout(() => {
+        setGachaPhase('reveal');
+        // Roll cards sequentially every 160ms
+        rewards.forEach((_, idx) => {
+          const t = setTimeout(() => {
+            setRevealedCount(c => Math.max(c, idx + 1));
+            audio.playClick();
+            if (idx === rewards.length - 1) {
+              audio.playCatchCelebration(maxR);
+            }
+          }, idx * 160);
+          timersRef.current.push(t);
+        });
+      }, 400);
+
+      timersRef.current.push(t2);
+    }, 1350);
+
+    timersRef.current.push(t1);
+  };
+
+  const handleSkip = () => {
+    timersRef.current.forEach(t => clearTimeout(t));
+    timersRef.current = [];
+    setRevealedCount(currentRewards.length);
+    setGachaPhase('summary');
+    audio.playCatchCelebration(highestRarity);
+    onUpdateSave({ ...SaveManager.getData() });
+  };
+
+  const handleFinishGacha = () => {
+    timersRef.current.forEach(t => clearTimeout(t));
+    timersRef.current = [];
+    setGachaPhase('idle');
+    setCurrentRewards([]);
+    onUpdateSave({ ...SaveManager.getData() });
   };
 
   const handleToggleAccessory = (type: CatAccessoryType, id: string) => {
@@ -111,24 +236,24 @@ export const WishModal: React.FC<WishModalProps> = ({
               <span style={{ fontSize: '20px' }}>🌟</span>
               <span>CELESTIAL WISHING FOUNTAIN</span>
             </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-heading)', marginTop: '4px' }}>
+            <div style={{ fontSize: '13px', color: '#94a3b8', fontFamily: 'var(--font-pixel)', marginTop: '4px', letterSpacing: '0.5px', lineHeight: '1.4' }}>
               OFFER STARDUST & WISH TOKENS TO SUMMON CELESTIAL BLESSINGS & RARE ACCESSORIES
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* Currency Pill */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#09081a', padding: '6px 14px', border: '1px solid #312e81' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '16px' }}>⭐</span>
-                <span style={{ color: '#fef08a', fontFamily: 'var(--font-heading)', fontSize: '13px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#09081a', padding: '6px 14px', border: '1px solid #312e81', whiteSpace: 'nowrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '14px' }}>⭐</span>
+                <span style={{ color: '#fef08a', fontFamily: 'var(--font-heading)', fontSize: '11px', whiteSpace: 'nowrap', lineHeight: '1.3' }}>
                   {saveData.wishTokens || 0} TOKENS
                 </span>
               </div>
               <div style={{ width: '1px', height: '14px', background: '#312e81' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <PixelStardustIcon size={16} />
-                <span style={{ color: '#38bdf8', fontFamily: 'var(--font-heading)', fontSize: '13px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                <PixelStardustIcon size={14} />
+                <span style={{ color: '#38bdf8', fontFamily: 'var(--font-heading)', fontSize: '11px', whiteSpace: 'nowrap', lineHeight: '1.3' }}>
                   {saveData.stardust}
                 </span>
               </div>
@@ -141,30 +266,28 @@ export const WishModal: React.FC<WishModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid #1e1b4b', paddingBottom: '10px', marginTop: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #1e1b4b', paddingBottom: '10px', marginTop: '12px' }}>
           <button
-            className={`pixel-btn ${activeTab === 'wish' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '6px 14px', fontSize: '11px' }}
-            onClick={() => { setActiveTab('wish'); setWishResults(null); }}
+            className={`pixel-tab-btn ${activeTab === 'wish' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('wish'); setGachaPhase('idle'); }}
           >
             ⭐ MAKE A WISH
           </button>
           <button
-            className={`pixel-btn ${activeTab === 'blessings' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '6px 14px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}
-            onClick={() => { setActiveTab('blessings'); setWishResults(null); }}
+            className={`pixel-tab-btn ${activeTab === 'blessings' ? 'active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            onClick={() => { setActiveTab('blessings'); setGachaPhase('idle'); }}
           >
             <span>✨ ACTIVE BLESSINGS</span>
             {activeBlessings.length > 0 && (
-              <span style={{ background: '#38bdf8', color: '#09081a', borderRadius: '50%', padding: '1px 5px', fontSize: '9px', fontWeight: 'bold' }}>
+              <span style={{ background: '#38bdf8', color: '#09081a', borderRadius: '2px', padding: '1px 5px', fontSize: '9px', fontWeight: 'bold' }}>
                 {activeBlessings.length}
               </span>
             )}
           </button>
           <button
-            className={`pixel-btn ${activeTab === 'wardrobe' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '6px 14px', fontSize: '11px' }}
-            onClick={() => { setActiveTab('wardrobe'); setWishResults(null); }}
+            className={`pixel-tab-btn ${activeTab === 'wardrobe' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('wardrobe'); setGachaPhase('idle'); }}
           >
             👑 CAT ACCESSORIES ({unlockedAccSet.size}/{Object.keys(CAT_ACCESSORIES).length})
           </button>
@@ -172,13 +295,13 @@ export const WishModal: React.FC<WishModalProps> = ({
 
         {/* Error Notification */}
         {errorMessage && (
-          <div style={{ margin: '12px 0 0', padding: '8px 12px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', fontSize: '11px', fontFamily: 'var(--font-heading)' }}>
+          <div style={{ margin: '12px 0 0', padding: '8px 12px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', fontSize: '11px', fontFamily: 'var(--font-heading)', lineHeight: '1.4' }}>
             ⚠️ {errorMessage}
           </div>
         )}
 
         {/* TAB 1: MAKE A WISH */}
-        {activeTab === 'wish' && !wishResults && !isWishing && (
+        {activeTab === 'wish' && gachaPhase === 'idle' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
             {/* Visual Center Banner */}
             <div style={{
@@ -193,15 +316,15 @@ export const WishModal: React.FC<WishModalProps> = ({
               <div style={{ fontSize: '42px', marginBottom: '8px', filter: 'drop-shadow(0 0 12px #facc15)' }}>
                 ⛲ ✨
               </div>
-              <h2 style={{ fontSize: '18px', color: '#fef08a', fontFamily: 'var(--font-heading)', margin: '0 0 6px' }}>
+              <h2 style={{ fontSize: '16px', color: '#fef08a', fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '1px', lineHeight: '1.4' }}>
                 THE ANCIENT CELESTIAL FOUNTAIN
               </h2>
-              <p style={{ fontSize: '12px', color: '#cbd5e1', maxWidth: '520px', margin: '0 auto 16px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '13px', color: '#cbd5e1', maxWidth: '520px', margin: '0 auto 16px', lineHeight: '1.6', fontFamily: 'var(--font-pixel)' }}>
                 Cast a wish into the starlight waters. Unearth mythical cat hats, cosmic capes, harmonic charms, and powerful timed celestial blessings!
               </p>
 
-              <div style={{ display: 'inline-flex', gap: '8px', background: 'rgba(15, 23, 42, 0.75)', padding: '6px 14px', border: '1px solid #38bdf8' }}>
-                <span style={{ fontSize: '11px', color: '#38bdf8', fontFamily: 'var(--font-heading)' }}>
+              <div style={{ display: 'inline-flex', gap: '8px', background: 'rgba(15, 23, 42, 0.85)', padding: '6px 14px', border: '1px solid #38bdf8', boxShadow: '0 0 10px rgba(56, 189, 248, 0.2)' }}>
+                <span style={{ fontSize: '10px', color: '#38bdf8', fontFamily: 'var(--font-heading)', letterSpacing: '0.5px', lineHeight: '1.4' }}>
                   GUARANTEE: AT LEAST 1 RARE+ PERK / ACCESSORY EVERY 10 WISHES!
                 </span>
               </div>
@@ -212,13 +335,13 @@ export const WishModal: React.FC<WishModalProps> = ({
               {/* Single Star Wish Card */}
               <div className="cosmic-panel" style={{ padding: '16px', border: '1px solid #312e81', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: '#fef08a', fontFamily: 'var(--font-heading)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', color: '#fef08a', fontFamily: 'var(--font-heading)', letterSpacing: '0.5px', lineHeight: '1.4' }}>
                       1x STAR WISH
                     </span>
                     <span className="rarity-badge rarity-uncommon">SINGLE</span>
                   </div>
-                  <p style={{ fontSize: '11px', color: '#94a3b8', margin: '8px 0 16px', lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: '6px 0 16px', lineHeight: '1.5', fontFamily: 'var(--font-pixel)' }}>
                     Draw 1 celestial reward from the stars.
                   </p>
                 </div>
@@ -226,14 +349,14 @@ export const WishModal: React.FC<WishModalProps> = ({
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     className="pixel-btn btn-primary"
-                    style={{ flex: 1, padding: '10px 8px', fontSize: '11px' }}
+                    style={{ flex: 1, padding: '10px 8px', fontSize: '10px' }}
                     onClick={() => handleSingleWish(true)}
                   >
                     ⭐ 1 TOKEN
                   </button>
                   <button
                     className="pixel-btn btn-secondary"
-                    style={{ flex: 1, padding: '10px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    style={{ flex: 1, padding: '10px 8px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                     onClick={() => handleSingleWish(false)}
                   >
                     <PixelStardustIcon size={14} />
@@ -245,13 +368,15 @@ export const WishModal: React.FC<WishModalProps> = ({
               {/* Tenfold Constellation Wish Card */}
               <div className="cosmic-panel" style={{ padding: '16px', border: '2px solid #7c3aed', background: '#0e0c29', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: '#c084fc', fontFamily: 'var(--font-heading)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '11px', color: '#c084fc', fontFamily: 'var(--font-heading)', letterSpacing: '0.5px', lineHeight: '1.5', flex: 1 }}>
                       10x CONSTELLATION WISH
                     </span>
-                    <span className="rarity-badge rarity-legendary">GUARANTEED RARE+</span>
+                    <span className="rarity-badge rarity-legendary" style={{ fontSize: '8px', padding: '3px 6px', whiteSpace: 'nowrap' }}>
+                      GUARANTEED RARE+
+                    </span>
                   </div>
-                  <p style={{ fontSize: '11px', color: '#94a3b8', margin: '8px 0 16px', lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: '6px 0 16px', lineHeight: '1.5', fontFamily: 'var(--font-pixel)' }}>
                     Summon a meteor shower of 10 celestial wishes with discount!
                   </p>
                 </div>
@@ -259,14 +384,14 @@ export const WishModal: React.FC<WishModalProps> = ({
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     className="pixel-btn btn-primary"
-                    style={{ flex: 1, padding: '10px 8px', fontSize: '11px', background: '#7c3aed', borderColor: '#a855f7' }}
+                    style={{ flex: 1, padding: '10px 8px', fontSize: '10px', background: '#7c3aed', borderColor: '#a855f7' }}
                     onClick={() => handleTenfoldWish(true)}
                   >
                     ⭐ 10 TOKENS
                   </button>
                   <button
                     className="pixel-btn btn-secondary"
-                    style={{ flex: 1, padding: '10px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    style={{ flex: 1, padding: '10px 8px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                     onClick={() => handleTenfoldWish(false)}
                   >
                     <PixelStardustIcon size={14} />
@@ -278,32 +403,192 @@ export const WishModal: React.FC<WishModalProps> = ({
           </div>
         )}
 
-        {/* WISHING ANIMATION STATE */}
-        {isWishing && (
-          <div style={{ minHeight: '340px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-            <div style={{ fontSize: '48px', animation: 'spin 2s infinite linear' }}>
-              💫
+        {/* GACHA PHASE 1 & 2: METEOR DESCENT & IMPACT BURST */}
+        {activeTab === 'wish' && (gachaPhase === 'meteor' || gachaPhase === 'burst') && (
+          <div className="gacha-stage">
+            <button className="gacha-skip-btn" onClick={handleSkip}>
+              SKIP ⏭
+            </button>
+
+            {/* Meteor Trail */}
+            <div className="gacha-meteor-container">
+              <div
+                className="gacha-meteor"
+                style={{
+                  color: getRarityColor(highestRarity),
+                  background: `linear-gradient(to right, ${getRarityColor(highestRarity)}, rgba(255, 255, 255, 0.9), transparent)`
+                }}
+              >
+                <div className="gacha-meteor-head" />
+              </div>
             </div>
-            <div style={{ color: '#fef08a', fontFamily: 'var(--font-heading)', fontSize: '16px', letterSpacing: '2px' }}>
-              COMMUNING WITH THE STARS...
-            </div>
-            <div style={{ color: '#38bdf8', fontSize: '12px' }}>
-              Drawing celestial blessings and cosmic relics...
+
+            {/* Impact Flash */}
+            {gachaPhase === 'burst' && <div className="gacha-impact-flash" />}
+
+            {/* Starlight Constellation Pulse */}
+            <div style={{ textAlign: 'center', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+              <div style={{ fontSize: '54px', animation: 'spin 3s infinite linear' }}>
+                🌟
+              </div>
+              <div style={{ color: '#fef08a', fontFamily: 'var(--font-heading)', fontSize: '14px', letterSpacing: '2px', textShadow: '0 0 12px rgba(254, 240, 138, 0.5)' }}>
+                ✦ COMMUNING WITH THE CONSTELLATIONS ✦
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>Highest Star Resonance:</span>
+                <span className={`rarity-badge rarity-${highestRarity}`}>
+                  {highestRarity}
+                </span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* WISH REVEAL RESULTS */}
-        {wishResults && (
+        {/* GACHA PHASE 3: REVEAL (SINGLE OR 10-PULL REEL) */}
+        {activeTab === 'wish' && gachaPhase === 'reveal' && (
+          <div className="gacha-stage">
+            <button className="gacha-skip-btn" onClick={handleSkip}>
+              {currentRewards.length === 1 ? 'SKIP ⏭' : 'REVEAL ALL ⏭'}
+            </button>
+
+            {/* Single Wish Card Reveal */}
+            {currentRewards.length === 1 && (
+              <>
+                {(highestRarity === 'legendary' || highestRarity === 'epic') && (
+                  <div className="gacha-sunburst" />
+                )}
+                <div
+                  className="gacha-reveal-card"
+                  style={{
+                    borderColor: getRarityColor(currentRewards[0].rarity),
+                    boxShadow: `0 0 28px ${getRarityColor(currentRewards[0].rarity)}40`
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '10px', color: '#94a3b8' }}>✦ STAR REWARD ✦</span>
+                    <span className={`rarity-badge rarity-${currentRewards[0].rarity}`}>
+                      {currentRewards[0].rarity}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '48px', margin: '8px 0 14px', filter: `drop-shadow(0 0 16px ${getRarityColor(currentRewards[0].rarity)})` }}>
+                    {currentRewards[0].accessory?.icon || currentRewards[0].blessing?.icon || (currentRewards[0].type === 'cosmic_event' ? '🎫' : '✨')}
+                  </div>
+
+                  <div style={{ fontSize: '14px', color: '#f8fafc', fontFamily: 'var(--font-heading)', marginBottom: '8px', lineHeight: '1.4' }}>
+                    {currentRewards[0].name}
+                  </div>
+
+                  <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5', marginBottom: '16px', fontFamily: 'var(--font-pixel)' }}>
+                    {currentRewards[0].description}
+                  </div>
+
+                  {currentRewards[0].type === 'accessory' && (
+                    <div style={{ fontSize: '11px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '6px 12px', border: '1px solid #0284c7', width: '100%', marginBottom: '16px' }}>
+                      ✦ BONUS: {currentRewards[0].accessory?.bonusDescription}
+                    </div>
+                  )}
+
+                  {currentRewards[0].type === 'blessing' && (
+                    <div style={{ fontSize: '11px', color: '#c084fc', background: 'rgba(192, 132, 252, 0.1)', padding: '6px 12px', border: '1px solid #7c3aed', width: '100%', marginBottom: '16px' }}>
+                      ✦ ACTIVE: 5 MINUTES CELESTIAL BUFF
+                    </div>
+                  )}
+
+                  <button
+                    className="pixel-btn btn-primary"
+                    style={{ width: '100%', padding: '10px', fontSize: '11px' }}
+                    onClick={handleFinishGacha}
+                  >
+                    ✦ COLLECT REWARD ✦
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Tenfold Sequential Reel Grid */}
+            {currentRewards.length === 10 && (
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '680px', alignItems: 'center' }}>
+                  <div style={{ fontSize: '13px', color: '#fef08a', fontFamily: 'var(--font-heading)' }}>
+                    ✦ CONSTELLATION REVEAL ({Math.min(revealedCount, 10)} / 10)
+                  </div>
+                  {revealedCount < 10 && (
+                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                      Click unrevealed stars to crack them open!
+                    </div>
+                  )}
+                </div>
+
+                <div className="gacha-tenfold-grid">
+                  {currentRewards.map((reward, i) => {
+                    const isRevealed = i < revealedCount;
+                    return (
+                      <div
+                        key={i}
+                        className={`gacha-slot-card ${isRevealed ? 'revealed' : 'unrevealed'}`}
+                        style={isRevealed ? {
+                          borderColor: getRarityColor(reward.rarity),
+                          boxShadow: `0 0 12px ${getRarityColor(reward.rarity)}30`
+                        } : {}}
+                        onClick={() => {
+                          if (!isRevealed) {
+                            setRevealedCount(c => Math.max(c, i + 1));
+                            audio.playClick();
+                          }
+                        }}
+                      >
+                        {isRevealed ? (
+                          <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                              <span style={{ fontSize: '8px', color: '#64748b' }}>#{i + 1}</span>
+                              <span className={`rarity-badge rarity-${reward.rarity}`} style={{ fontSize: '7px', padding: '1px 4px' }}>
+                                {reward.rarity}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '26px', margin: '4px 0' }}>
+                              {reward.accessory?.icon || reward.blessing?.icon || (reward.type === 'cosmic_event' ? '🎫' : '✨')}
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#f8fafc', fontFamily: 'var(--font-heading)', lineHeight: '1.2', maxHeight: '28px', overflow: 'hidden' }}>
+                              {reward.name}
+                            </div>
+                          </>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '6px' }}>
+                            <span style={{ fontSize: '22px', animation: 'spin 4s infinite linear' }}>⭐</span>
+                            <span style={{ fontSize: '9px', color: '#6366f1', fontFamily: 'var(--font-heading)' }}>#{i + 1}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {revealedCount >= 10 && (
+                  <button
+                    className="pixel-btn btn-primary"
+                    style={{ padding: '10px 28px', fontSize: '11px', marginTop: '6px' }}
+                    onClick={handleFinishGacha}
+                  >
+                    ✦ COLLECT ALL REWARDS ✦
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* GACHA PHASE 4: SUMMARY OVERVIEW */}
+        {activeTab === 'wish' && gachaPhase === 'summary' && (
           <div style={{ marginTop: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div style={{ fontSize: '14px', color: '#fef08a', fontFamily: 'var(--font-heading)' }}>
-                ✦ THE STARS HAVE ANSWERED! ({wishResults.length} REWARD{wishResults.length > 1 ? 'S' : ''})
+                ✦ THE STARS HAVE ANSWERED! ({currentRewards.length} REWARD{currentRewards.length > 1 ? 'S' : ''})
               </div>
               <button
                 className="pixel-btn btn-primary"
                 style={{ padding: '6px 14px', fontSize: '11px' }}
-                onClick={() => setWishResults(null)}
+                onClick={handleFinishGacha}
               >
                 COLLECT ALL
               </button>
@@ -311,20 +596,20 @@ export const WishModal: React.FC<WishModalProps> = ({
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: wishResults.length === 1 ? '1fr' : 'repeat(auto-fill, minmax(220px, 1fr))',
+              gridTemplateColumns: currentRewards.length === 1 ? '1fr' : 'repeat(auto-fill, minmax(220px, 1fr))',
               gap: '12px',
               maxHeight: '340px',
               overflowY: 'auto',
               paddingRight: '6px'
             }}>
-              {wishResults.map((reward, i) => (
+              {currentRewards.map((reward, i) => (
                 <div
                   key={i}
                   className="cosmic-panel"
                   style={{
                     padding: '14px',
                     border: '1px solid',
-                    borderColor: reward.rarity === 'legendary' ? '#eab308' : reward.rarity === 'epic' ? '#9333ea' : reward.rarity === 'rare' ? '#0284c7' : '#475569',
+                    borderColor: getRarityColor(reward.rarity),
                     background: '#09081a'
                   }}
                 >
@@ -337,10 +622,10 @@ export const WishModal: React.FC<WishModalProps> = ({
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '12px', color: '#f8fafc', fontFamily: 'var(--font-heading)', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: '#f8fafc', fontFamily: 'var(--font-heading)', marginBottom: '4px', lineHeight: '1.4' }}>
                     {reward.name}
                   </div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: 1.4, marginBottom: '8px' }}>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.4', marginBottom: '8px', fontFamily: 'var(--font-pixel)' }}>
                     {reward.description}
                   </div>
 

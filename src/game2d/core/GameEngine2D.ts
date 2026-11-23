@@ -12,6 +12,8 @@ import { Bobber2D } from '../entities/Bobber2D';
 import { FishingSystem2D, MinigameState2D } from '../fishing/FishingSystem2D';
 import { InteractiveStation2D } from '../world/Station2D';
 import { GameState, CatchResult, CatBreed } from '../../types/game';
+import { getEquippedRod } from '../../data/equipment';
+import { SaveManager } from '../../systems/save/SaveManager';
 
 export interface GameEngine2DCallbacks {
   onStateChange: (state: GameState) => void;
@@ -52,7 +54,9 @@ export class GameEngine2D {
     this.map.setRegion(initialRegion);
 
     // Entities
-    this.cat = new PixelCat(initialBreed, 0, 180);
+    const initialSave = SaveManager.getData();
+    const initialRod = getEquippedRod(initialSave);
+    this.cat = new PixelCat(initialBreed, 0, 180, initialRod.rodColor);
     this.bobber = new Bobber2D();
     this.fishing = new FishingSystem2D(this.cat, this.bobber, this.map.water);
 
@@ -69,18 +73,41 @@ export class GameEngine2D {
   private setupListeners(): void {
     window.addEventListener('resize', this.handleResize);
 
-    // Click handler for interactions & minigames
-    this.canvas.addEventListener('mousedown', (e) => {
-      if (e.button === 0) {
-        if (this.fishing.state === 'minigame') {
-          this.fishing.handleActionInput();
-        } else if (this.fishing.state === 'exploring') {
-          if (this.currentPromptStation) {
-            this.triggerCurrentInteraction();
-          }
+    // Click and touch handler for interactions, cat petting, and minigames
+    const handlePointerAction = (clientX: number, clientY: number) => {
+      if (this.fishing.state === 'minigame') {
+        this.fishing.handleActionInput();
+      } else if (this.fishing.state === 'exploring') {
+        // Check if user clicked/tapped directly on the cat to pet it!
+        const rect = this.canvas.getBoundingClientRect();
+        const screenX = clientX - rect.left;
+        const screenY = clientY - rect.top;
+        const worldPos = this.camera.screenToWorld(screenX, screenY);
+        const distToCat = Math.hypot(worldPos.x - this.cat.x, worldPos.y - (this.cat.y - 8));
+
+        if (distToCat <= 24) {
+          this.cat.triggerPet();
+          return;
+        }
+
+        if (this.currentPromptStation) {
+          this.triggerCurrentInteraction();
         }
       }
+    };
+
+    this.canvas.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        handlePointerAction(e.clientX, e.clientY);
+      }
     });
+
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        handlePointerAction(touch.clientX, touch.clientY);
+      }
+    }, { passive: true });
   }
 
   private handleResize = (): void => {
@@ -176,8 +203,16 @@ export class GameEngine2D {
       this.map.resolveCollision(this.cat);
     }
 
-    // 3. Update Camera
-    this.camera.update(this.cat.x, this.cat.y, delta);
+    // 3. Update Camera (with gentle directional lookahead smoothing)
+    let lookX = 0;
+    let lookY = 0;
+    if (Math.abs(this.cat.vx) > 8) {
+      lookX = Math.sign(this.cat.vx) * 16;
+    }
+    if (Math.abs(this.cat.vy) > 8) {
+      lookY = Math.sign(this.cat.vy) * 14;
+    }
+    this.camera.update(this.cat.x, this.cat.y, delta, lookX, lookY);
 
     // 4. Update Map & Water effects
     this.map.update(delta);
@@ -207,12 +242,23 @@ export class GameEngine2D {
 
     // 2. Render Fishing Line (under entities if casting)
     if (this.bobber.isVisible) {
+      const curSave = SaveManager.getData();
+      const equippedRod = getEquippedRod(curSave);
       const tip = this.cat.getRodTipWorldPos();
-      this.bobber.renderLine(this.ctx, this.camera, tip.x, tip.y);
+      this.bobber.renderLine(this.ctx, this.camera, tip.x, tip.y, equippedRod.lineColor);
       this.bobber.renderBobber(this.ctx, this.camera);
     }
 
     // 3. Render Y-Sorted Entities (Cat, Stations, Props)
     this.map.renderYSorted(this.ctx, this.camera, this.cat, this.currentPromptStation, time);
+
+    // 4. Render Dynamic Ambient Night Lighting Overlay
+    this.map.renderLightingOverlay(this.ctx, this.camera, time);
+  }
+
+  public updateEquippedGear(): void {
+    const curSave = SaveManager.getData();
+    const equippedRod = getEquippedRod(curSave);
+    this.cat.setEquippedRodColor(equippedRod.rodColor);
   }
 }

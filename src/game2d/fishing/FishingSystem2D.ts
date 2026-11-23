@@ -9,7 +9,7 @@ import { Bobber2D } from '../entities/Bobber2D';
 import { StarpondWater2D } from '../world/StarpondWater2D';
 import { InteractiveStation2D } from '../world/Station2D';
 import { CREATURES, rollVariant, rollWeight, calculateStardustReward, calculateExpReward } from '../../data/creatures';
-import { EQUIPMENT, getStatValue } from '../../data/equipment';
+import { EQUIPMENT, getStatValue, getEquippedRod } from '../../data/equipment';
 import { CONSTELLATIONS } from '../../data/constellations';
 import { SaveManager } from '../../systems/save/SaveManager';
 import { AudioManager } from '../../systems/audio/AudioManager';
@@ -135,7 +135,9 @@ export class FishingSystem2D {
       const dx = this.water.centerX - this.cat.x;
       const dy = this.water.centerY - this.cat.y;
       const dist = Math.hypot(dx, dy);
-      const castDist = Math.min(dist * 0.75, 45 + saveData.rodLevel * 8);
+      const equippedRod = getEquippedRod(saveData);
+      const rodRangeMultiplier = 1 + (equippedRod.bonusCastRangePct || 0);
+      const castDist = Math.min(dist * 0.75, (45 + saveData.rodLevel * 8) * rodRangeMultiplier);
       targetX = this.cat.x + (dx / dist) * castDist;
       targetY = this.cat.y + (dy / dist) * castDist;
     }
@@ -153,7 +155,11 @@ export class FishingSystem2D {
 
         const saveData = SaveManager.getData();
         const baitBonus = getStatValue('bait', saveData.baitLevel) / 100;
+        const equippedRod = getEquippedRod(saveData);
         let waitBase = 3.6 * (1.0 - baitBonus * 0.5) + (Math.random() - 0.5) * 1.2;
+        if (equippedRod.bonusBiteSpeedPct) {
+          waitBase *= (1.0 - equippedRod.bonusBiteSpeedPct);
+        }
         if (WishManager.hasBlessing('swift_paws')) {
           waitBase *= 0.6;
         }
@@ -211,12 +217,14 @@ export class FishingSystem2D {
 
     const activePool = pool.length > 0 ? pool : [CREATURES[0]];
 
-    // Rare Attraction Multipliers (Abyssal Magnet Blessing + Cosmic Crown)
+    // Rare Attraction Multipliers (Abyssal Magnet Blessing + Cosmic Crown + Equipped Rod Perk)
+    const equippedRod = getEquippedRod(saveData);
     const hasMagnet = WishManager.hasBlessing('abyssal_magnet');
     const hasCrown = saveData.equippedAccessories?.hat === 'hat_cosmic_crown';
     let rareMultiplier = 1.0;
     if (hasMagnet) rareMultiplier *= 2.2;
     if (hasCrown) rareMultiplier *= 1.35;
+    if (equippedRod.bonusRareWeightPct) rareMultiplier *= (1 + equippedRod.bonusRareWeightPct);
 
     let totalWeight = 0;
     const weights: number[] = [];
@@ -243,9 +251,15 @@ export class FishingSystem2D {
     if (!this.candidateCreature) return;
 
     const saveData = SaveManager.getData();
+    const equippedRod = getEquippedRod(saveData);
     const lineBonus = getStatValue('line', saveData.lineLevel);
     const baseWidth = Math.max(0.18, 0.32 - this.candidateCreature.catchDifficulty * 0.16);
     let safeWidth = baseWidth + (lineBonus / 100) * 0.15;
+
+    // Apply Equipped Rod Safe Zone bonus
+    if (equippedRod.bonusSafeZonePct) {
+      safeWidth *= (1 + equippedRod.bonusSafeZonePct);
+    }
 
     // Apply Celestial Clarity Blessing & Accessories
     if (WishManager.hasBlessing('celestial_clarity')) {
@@ -265,6 +279,9 @@ export class FishingSystem2D {
     }
 
     let missesLeft = 3 + Math.floor((saveData.bobberLevel - 1) * 0.34);
+    if (equippedRod.bonusTensionHearts) {
+      missesLeft += equippedRod.bonusTensionHearts;
+    }
     if (saveData.equippedAccessories?.charm === 'charm_lunar_pearl') {
       missesLeft += 1;
     }
@@ -399,7 +416,14 @@ export class FishingSystem2D {
     const { isNewDiscovery, isNewRecord } = SaveManager.recordCatch(creature.id, variant, weight);
     const saveData = SaveManager.getData();
 
-    // Celestial Blessings & Accessory Reward Boosts
+    // Celestial Blessings, Rod Perks & Accessory Reward Boosts
+    const equippedRod = getEquippedRod(saveData);
+    if (equippedRod.bonusStardustPct) {
+      earnedStardust = Math.round(earnedStardust * (1 + equippedRod.bonusStardustPct));
+    }
+    if (equippedRod.bonusExpPct) {
+      earnedExp = Math.round(earnedExp * (1 + equippedRod.bonusExpPct));
+    }
     if (WishManager.hasBlessing('starfall_abundance')) {
       earnedStardust *= 2;
     }

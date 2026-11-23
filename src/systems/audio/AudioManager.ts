@@ -108,11 +108,36 @@ export class AudioManager {
       return;
     }
 
-    const wasPlaying = !this.bgmAudio.paused;
-    this.bgmAudio.src = track.url;
-    this.bgmAudio.loop = true;
-    this.bgmAudio.volume = this.isMuted ? 0 : this.masterVol * this.bgmVol;
-    if (wasPlaying) {
+    const targetVol = this.isMuted ? 0 : this.masterVol * this.bgmVol;
+
+    // Graceful crossfade: fade out old track, swap src, fade in new track
+    const fadeOut = () => {
+      if (this.bgmAudio && this.bgmAudio.volume > 0.08) {
+        this.bgmAudio.volume = Math.max(0, this.bgmAudio.volume - 0.08);
+        setTimeout(fadeOut, 30);
+      } else if (this.bgmAudio) {
+        this.bgmAudio.src = track.url;
+        this.bgmAudio.loop = true;
+        this.bgmAudio.play().then(() => {
+          fadeIn();
+        }).catch(() => {});
+      }
+    };
+
+    const fadeIn = () => {
+      if (this.bgmAudio && this.bgmAudio.volume < targetVol - 0.08) {
+        this.bgmAudio.volume = Math.min(targetVol, this.bgmAudio.volume + 0.08);
+        setTimeout(fadeIn, 30);
+      } else if (this.bgmAudio) {
+        this.bgmAudio.volume = targetVol;
+      }
+    };
+
+    if (!this.bgmAudio.paused) {
+      fadeOut();
+    } else {
+      this.bgmAudio.src = track.url;
+      this.bgmAudio.volume = targetVol;
       this.bgmAudio.play().catch(() => {});
     }
   }
@@ -327,5 +352,82 @@ export class AudioManager {
 
   public playCatchFanfare(rarity: string): void {
     this.playCatchCelebration(rarity);
+  }
+
+  // Gentle happy purr and chirp when petted
+  public playPurr(): void {
+    this.initContext();
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    // Happy meow chirp
+    const chirp = this.ctx.createOscillator();
+    const chirpGain = this.ctx.createGain();
+    chirp.type = 'sine';
+    chirp.frequency.setValueAtTime(587.33, now); // D5
+    chirp.frequency.exponentialRampToValueAtTime(880.0, now + 0.15); // A5
+    chirpGain.gain.setValueAtTime(0.25 * this.masterVol * this.sfxVol, now);
+    chirpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    chirp.connect(chirpGain);
+    chirpGain.connect(this.ctx.destination);
+    chirp.start(now);
+    chirp.stop(now + 0.35);
+
+    // Warm purr vibration
+    const purrOsc = this.ctx.createOscillator();
+    const purrGain = this.ctx.createGain();
+    purrOsc.type = 'triangle';
+    purrOsc.frequency.setValueAtTime(140, now);
+    purrGain.gain.setValueAtTime(0.2 * this.masterVol * this.sfxVol, now);
+    purrGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+    purrOsc.connect(purrGain);
+    purrGain.connect(this.ctx.destination);
+    purrOsc.start(now);
+    purrOsc.stop(now + 0.8);
+  }
+
+  // Gacha Meteor Launch Sound Effect (rising cosmic frequency sweep)
+  public playGachaMeteorLaunch(rarity: string = 'common'): void {
+    this.initContext();
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    const startFreq = rarity === 'legendary' ? 260 : rarity === 'epic' ? 330 : 440;
+    const endFreq = rarity === 'legendary' ? 1400 : rarity === 'epic' ? 1100 : 880;
+
+    osc.frequency.setValueAtTime(startFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, now + 1.2);
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.35 * this.masterVol * this.sfxVol, now + 0.5);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 1.35);
+  }
+
+  // Gacha Impact & Crystal Burst Sound Effect
+  public playGachaImpact(): void {
+    this.initContext();
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    [523.25, 783.99, 1046.50, 1567.98].forEach((freq, idx) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+      gain.gain.setValueAtTime(0.3 * this.masterVol * this.sfxVol, now + idx * 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.8);
+      osc.connect(gain);
+      gain.connect(this.ctx!.destination);
+      osc.start(now + idx * 0.04);
+      osc.stop(now + idx * 0.04 + 0.85);
+    });
   }
 }

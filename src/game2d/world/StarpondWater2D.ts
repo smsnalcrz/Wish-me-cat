@@ -1,17 +1,26 @@
 /**
  * StarpondWater2D.ts
  * Handcrafted 2D Pixel-Art Celestial Galaxy Pond for Wish Me Cat.
- * Upgraded with Organic Layered Water Depth, Sky Clearing Reflections,
- * Clustered Lilypads with Floor Shadows, Floating Petals, Warm Lantern Reflections,
- * and Volumetric 3D Shaded Fish with Dynamic Cast Shadows across Multi-Depth Tiers.
+ * Upgraded with Multi-World Regional Theming:
+ * Dynamically adjusts water depth gradients, sky clearing reflections, shoreline crag colors,
+ * surface debris (sakura petals, bioluminescent spores, comet sparks, ice floes, spirit lilies, solar embers),
+ * and aquatic fauna (Celestial Koi, Luminous Jellyfish, Comet Salmon, Ghost Rays, Solar Dragon Koi).
  */
 
 import { Camera2D } from '../core/Camera2D';
 import {
   generateCelestialKoiSpriteSheet,
   generateLotusLilypadSprite,
-  generateDeepFishSpriteSheet
+  generateDeepFishSpriteSheet,
+  generateIceFloeSprite,
+  generateAbyssalLilySprite,
+  generateSolarDiskSprite,
+  generateJellyfishSpriteSheet,
+  generateCometFishSpriteSheet,
+  generateGhostFishSpriteSheet,
+  generateSolarDragonFishSpriteSheet
 } from '../rendering/PixelSprites';
+import { WORLD_ENVIRONMENTS, WorldEnvironmentData } from './WorldEnvironmentConfig';
 
 export interface WaterRipple {
   x: number;
@@ -30,7 +39,7 @@ export interface LilyPad {
 }
 
 export interface SwimmingFish {
-  type: 'koi' | 'deep';
+  type: 'koi' | 'deep' | 'jellyfish' | 'comet_dart' | 'ghost' | 'dragon';
   depth: number; // 0.88 = surface, 0.58 = mid, 0.25 = deep
   angle: number;
   speed: number;
@@ -41,6 +50,7 @@ export interface SwimmingFish {
   baseWidth: number;
   baseHeight: number;
   tailPhase: number;
+  name?: string;
 }
 
 export interface FloatingPetal {
@@ -67,10 +77,21 @@ export class StarpondWater2D {
   public radiusY: number = 115;
   public cliffHeight: number = 14; // Sunken basin cliff drop
 
-  // Pixel Assets
+  public currentRegionId: string = 'region_moonpool';
+
+  // Pixel Assets Cache
   private koiFrames: HTMLCanvasElement[] = [];
   private deepFishFrames: HTMLCanvasElement[] = [];
-  private lilypadCanvas: HTMLCanvasElement | null = null;
+  private jellyfishFrames: HTMLCanvasElement[] = [];
+  private cometFishFrames: HTMLCanvasElement[] = [];
+  private ghostFishFrames: HTMLCanvasElement[] = [];
+  private dragonFishFrames: HTMLCanvasElement[] = [];
+
+  // Pad/Debris Sprite Cache
+  private lotusPadCanvas: HTMLCanvasElement | null = null;
+  private iceFloeCanvas: HTMLCanvasElement | null = null;
+  private abyssalLilyCanvas: HTMLCanvasElement | null = null;
+  private solarDiskCanvas: HTMLCanvasElement | null = null;
 
   // Starlight Water Particles & Shimmers
   private glints: { x: number; y: number; size: number; speed: number; alpha: number; phase: number }[] = [];
@@ -79,7 +100,7 @@ export class StarpondWater2D {
   private petals: FloatingPetal[] = [];
   private shorelineRocks: { angle: number; dist: number; width: number; height: number; color: string; highlight: string; wetColor: string }[] = [];
 
-  // Enhanced Multi-Depth Swimming Fish
+  // Active Regional Swimming Fish Roster
   private fishRoster: SwimmingFish[] = [];
 
   // Pier Lantern Reflection Coordinates (relative to pond center)
@@ -94,11 +115,33 @@ export class StarpondWater2D {
     this.centerX = centerX;
     this.centerY = centerY;
 
+    this.initSpriteCache();
+    this.setRegion('region_moonpool');
+  }
+
+  private initSpriteCache(): void {
     this.koiFrames = generateCelestialKoiSpriteSheet();
     this.deepFishFrames = generateDeepFishSpriteSheet();
-    this.lilypadCanvas = generateLotusLilypadSprite();
+    this.jellyfishFrames = generateJellyfishSpriteSheet();
+    this.cometFishFrames = generateCometFishSpriteSheet();
+    this.ghostFishFrames = generateGhostFishSpriteSheet();
+    this.dragonFishFrames = generateSolarDragonFishSpriteSheet();
 
-    // 1. Generate Starlight Sparkles in Clearing
+    this.lotusPadCanvas = generateLotusLilypadSprite();
+    this.iceFloeCanvas = generateIceFloeSprite();
+    this.abyssalLilyCanvas = generateAbyssalLilySprite();
+    this.solarDiskCanvas = generateSolarDiskSprite();
+  }
+
+  /**
+   * Set regional environment and repopulate water elements according to world configuration
+   */
+  public setRegion(regionId: string): void {
+    this.currentRegionId = regionId;
+    const config = WORLD_ENVIRONMENTS[regionId] || WORLD_ENVIRONMENTS['region_moonpool'];
+
+    // 1. Generate Sparkles in Clearing
+    this.glints = [];
     for (let i = 0; i < 40; i++) {
       const angle = Math.random() * Math.PI * 2;
       const r = Math.random() * 0.70;
@@ -112,85 +155,47 @@ export class StarpondWater2D {
       });
     }
 
-    // 2. Multi-Depth Swimming Fish Roster (Varying Depths, Volumetric Shading, Cast Shadows)
-    this.fishRoster = [
-      // Surface Vibrant Celestial Koi (z = 0.88, crisp, full size, near shadow)
-      {
-        type: 'koi',
-        depth: 0.88,
-        angle: 0.4,
-        speed: 0.30,
-        orbitRx: this.radiusX * 0.48,
-        orbitRy: this.radiusY * 0.46,
-        orbitCenterX: -6,
-        orbitCenterY: 10,
-        baseWidth: 26,
-        baseHeight: 16,
-        tailPhase: 0
-      },
-      // Mid-Depth Starlight Koi (z = 0.58, slightly softened, medium shadow)
-      {
-        type: 'koi',
-        depth: 0.58,
-        angle: 3.4,
-        speed: 0.26,
-        orbitRx: this.radiusX * 0.42,
-        orbitRy: this.radiusY * 0.40,
-        orbitCenterX: 8,
-        orbitCenterY: -4,
-        baseWidth: 24,
-        baseHeight: 15,
-        tailPhase: 1.8
-      },
-      // Deep Abyssal Stargazer (z = 0.22, deep shadow silhouette, far shadow, slow undulating swim)
-      {
-        type: 'deep',
-        depth: 0.22,
-        angle: 1.8,
-        speed: 0.16,
-        orbitRx: this.radiusX * 0.32,
-        orbitRy: this.radiusY * 0.28,
-        orbitCenterX: 0,
-        orbitCenterY: -10,
-        baseWidth: 32,
-        baseHeight: 14,
-        tailPhase: 3.5
-      },
-      // Agile Mid Minnow (z = 0.45, darting orbit)
-      {
-        type: 'deep',
-        depth: 0.45,
-        angle: 5.1,
-        speed: 0.34,
-        orbitRx: this.radiusX * 0.62,
-        orbitRy: this.radiusY * 0.52,
-        orbitCenterX: -12,
-        orbitCenterY: -6,
-        baseWidth: 20,
-        baseHeight: 10,
-        tailPhase: 0.8
-      }
-    ];
+    // 2. Set Up Multi-Depth Swimming Fish Roster from Region Config
+    this.fishRoster = [];
+    config.creatures.forEach((creature, idx) => {
+      this.fishRoster.push({
+        type: creature.type,
+        depth: creature.depth,
+        angle: (idx * 1.6) + Math.random() * 0.4,
+        speed: creature.speed,
+        orbitRx: this.radiusX * creature.orbitRxRatio,
+        orbitRy: this.radiusY * creature.orbitRyRatio,
+        orbitCenterX: (idx % 2 === 0 ? -1 : 1) * 8,
+        orbitCenterY: (idx % 3 === 0 ? 6 : -6),
+        baseWidth: creature.baseWidth,
+        baseHeight: creature.baseHeight,
+        tailPhase: idx * 1.2,
+        name: creature.name
+      });
+    });
 
-    // 3. Floating Sakura / Lotus Flower Petals on Water Surface (Reference Benchmark)
-    const petalColors = ['#f472b6', '#fbcfe8', '#fda4af', '#e879f9', '#f9a8d4'];
-    for (let i = 0; i < 28; i++) {
+    // 3. Floating Surface Debris Tailored to World (Petals, Spores, Ice Shards, Ember Sparks)
+    this.petals = [];
+    const debrisColors = config.water.debrisColors;
+    const debrisCount = config.water.debrisType === 'comet_sparks' ? 36 : 28;
+    for (let i = 0; i < debrisCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const r = 0.15 + Math.random() * 0.70;
       this.petals.push({
         x: Math.cos(angle) * this.radiusX * r,
         y: Math.sin(angle) * this.radiusY * r,
-        color: petalColors[i % petalColors.length],
+        color: debrisColors[i % debrisColors.length],
         phase: Math.random() * Math.PI * 2,
         size: Math.random() > 0.5 ? 2.5 : 2.0,
-        driftVx: (Math.random() - 0.5) * 2,
-        driftVy: (Math.random() - 0.5) * 2
+        driftVx: (Math.random() - 0.5) * 2.5,
+        driftVy: (Math.random() - 0.5) * 2.5
       });
     }
 
-    // 4. Clustered Lily Pads with Lotus Blossoms (Grouped like the reference image!)
+    // 4. Clustered Lily Pads / Ice Floes / Sun Disks
+    this.lilypads = [];
     const clusters = [
-      // Top-Left Cluster (Near bank waterfall/embankment)
+      // Top-Left Cluster
       [
         { ox: -75, oy: -55, s: 1.05 },
         { ox: -60, oy: -48, s: 0.90 },
@@ -232,16 +237,12 @@ export class StarpondWater2D {
       });
     });
 
-    // 5. 48 Interlocking Handcrafted Shoreline Stones with Wet Waterline Bases
+    // 5. Shoreline Perimeter Rocks with World Color Themes
+    this.shorelineRocks = [];
     const rockCount = 48;
+    const palettes = config.water.shorelineColors;
     for (let i = 0; i < rockCount; i++) {
       const angle = (i / rockCount) * Math.PI * 2;
-      const palettes = [
-        { color: '#383256', highlight: '#5b5088', wet: '#1e1a33' },
-        { color: '#443c68', highlight: '#685d9c', wet: '#24203e' },
-        { color: '#2d2747', highlight: '#4b4074', wet: '#18152b' },
-        { color: '#4e4574', highlight: '#7366aa', wet: '#2a2544' }
-      ];
       const p = palettes[i % palettes.length];
       this.shorelineRocks.push({
         angle,
@@ -291,7 +292,7 @@ export class StarpondWater2D {
       fish.tailPhase += delta * 6.5;
     });
 
-    // 3. Update Drifting Floating Petals
+    // 3. Update Drifting Floating Petals / Debris
     this.petals.forEach(petal => {
       petal.x += petal.driftVx * delta;
       petal.y += petal.driftVy * delta;
@@ -318,6 +319,7 @@ export class StarpondWater2D {
   }
 
   public render(ctx: CanvasRenderingContext2D, camera: Camera2D, time: number): void {
+    const config = WORLD_ENVIRONMENTS[this.currentRegionId] || WORLD_ENVIRONMENTS['region_moonpool'];
     const centerScreen = camera.worldToScreen(this.centerX, this.centerY);
     const scale = camera.zoom;
     const rx = this.radiusX * scale;
@@ -329,18 +331,18 @@ export class StarpondWater2D {
     // =========================================================================
     // STEP 1: SUNKEN BASIN NORTHERN EMBANKMENT DROP-OFF (Z-Depth Perspective)
     // =========================================================================
-    // Outer drop shadow pit behind northern rim
-    ctx.fillStyle = '#05030c';
+    ctx.fillStyle = config.palette.cliffDrop;
     ctx.beginPath();
     ctx.ellipse(centerScreen.x, centerScreen.y + 6 * scale, rx + 10 * scale, ry + drop + 8 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Stepped inner rock cliff wall along northern rim (angles 180° to 360°)
+    // Stepped inner rock cliff wall along northern rim
+    const [cr, cg, cb] = config.water.cliffRgb;
     for (let step = Math.floor(drop); step > 0; step -= Math.max(1, Math.floor(2 * scale))) {
       const t = step / drop;
-      const r = Math.floor(22 + (1 - t) * 22);
-      const g = Math.floor(18 + (1 - t) * 18);
-      const b = Math.floor(46 + (1 - t) * 38);
+      const r = Math.floor(cr + (1 - t) * 20);
+      const g = Math.floor(cg + (1 - t) * 20);
+      const b = Math.floor(cb + (1 - t) * 35);
       ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
       ctx.lineWidth = Math.max(1, Math.floor(2.5 * scale));
       ctx.beginPath();
@@ -353,8 +355,8 @@ export class StarpondWater2D {
     // =========================================================================
     const waterScreenY = centerScreen.y + drop * 0.45;
 
-    // Deep water bed base (Deepest Midnight Teal & Navy)
-    ctx.fillStyle = '#06111f';
+    // Deep water bed base
+    ctx.fillStyle = config.water.bedColor;
     ctx.beginPath();
     ctx.ellipse(centerScreen.x, waterScreenY, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -366,9 +368,8 @@ export class StarpondWater2D {
     ctx.clip();
 
     // =========================================================================
-    // STEP 3: ORGANIC LAYERED WATER DEPTH GRADIENT (No rigid concentric ovals)
+    // STEP 3: ORGANIC LAYERED WATER DEPTH GRADIENT
     // =========================================================================
-    // Multi-stop smooth radial gradient blending from dark shaded edges to softer indigo/teal
     const waterGrad = ctx.createRadialGradient(
       centerScreen.x - 8 * scale,
       waterScreenY + 6 * scale,
@@ -377,11 +378,12 @@ export class StarpondWater2D {
       waterScreenY,
       rx
     );
-    waterGrad.addColorStop(0.00, '#102742'); // Inner illuminated teal-indigo
-    waterGrad.addColorStop(0.35, '#0c2036'); // Soft indigo mid-zone
-    waterGrad.addColorStop(0.65, '#081728'); // Deep shaded water
-    waterGrad.addColorStop(0.85, '#06111f'); // Midnight navy margin
-    waterGrad.addColorStop(1.00, '#040b15'); // Abyssal perimeter
+    const stops = config.water.gradientStops;
+    waterGrad.addColorStop(0.00, stops[0]);
+    waterGrad.addColorStop(0.35, stops[1]);
+    waterGrad.addColorStop(0.65, stops[2]);
+    waterGrad.addColorStop(0.85, stops[3]);
+    waterGrad.addColorStop(1.00, stops[4]);
 
     ctx.fillStyle = waterGrad;
     ctx.beginPath();
@@ -395,17 +397,16 @@ export class StarpondWater2D {
     ctx.fill();
 
     // =========================================================================
-    // STEP 4: ORGANIC SHIMMERING SKY CLEARING REFLECTION (Reference Benchmark)
+    // STEP 4: ORGANIC SHIMMERING SKY CLEARING REFLECTION
     // =========================================================================
-    // In the pond clearing, render bright sky/starlight reflections with organic wave edges
     const skyOx = -8 * scale;
     const skyOy = 12 * scale;
     const skyRx = rx * 0.46;
     const skyRy = ry * 0.42;
 
-    // Outer sky reflection halo (Deep cerulean)
     const wavePulse = Math.sin(time * 0.8) * 0.04;
-    ctx.fillStyle = 'rgba(29, 78, 216, 0.35)';
+    // Outer sky reflection halo
+    ctx.fillStyle = config.water.reflectionHalo;
     ctx.beginPath();
     ctx.ellipse(
       centerScreen.x + skyOx,
@@ -418,8 +419,8 @@ export class StarpondWater2D {
     );
     ctx.fill();
 
-    // Mid sky blue clearing reflection
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.55)';
+    // Mid sky clearing reflection
+    ctx.fillStyle = config.water.reflectionMid;
     ctx.beginPath();
     ctx.ellipse(
       centerScreen.x + skyOx,
@@ -432,8 +433,8 @@ export class StarpondWater2D {
     );
     ctx.fill();
 
-    // Inner luminous sky reflection core (Bright Sky Cyan)
-    ctx.fillStyle = 'rgba(125, 211, 252, 0.65)';
+    // Inner luminous sky reflection core
+    ctx.fillStyle = config.water.reflectionCore;
     ctx.beginPath();
     ctx.ellipse(
       centerScreen.x + skyOx,
@@ -446,16 +447,17 @@ export class StarpondWater2D {
     );
     ctx.fill();
 
-    // Dithered Specular Light Crests in Reflection (Sparkling white & cyan glints)
+    // Specular Light Crests in Reflection
+    const glintCol = config.water.glintColors[0] || '#ffffff';
     this.glints.forEach(st => {
       const alpha = 0.35 + Math.sin(time * st.speed * 2 + st.phase) * 0.55;
       const gPos = camera.worldToScreen(this.centerX + st.x + skyOx / scale, this.centerY + st.y + (drop * 0.45 + skyOy) / scale);
-      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.fillStyle = glintCol === '#ffffff' ? `rgba(255, 255, 255, ${alpha})` : `${glintCol}`;
       ctx.fillRect(Math.floor(gPos.x), Math.floor(gPos.y), Math.floor(st.size * scale), Math.floor(st.size * scale));
     });
 
     // =========================================================================
-    // STEP 5: WARM LOCALIZED PIER LANTERN REFLECTIONS
+    // STEP 5: WARM / CELESTIAL PIER LANTERN REFLECTIONS
     // =========================================================================
     this.lanternReflections.forEach((lr, idx) => {
       const lPos = camera.worldToScreen(this.centerX + lr.x, this.centerY + lr.y + (drop * 0.45) / scale);
@@ -463,27 +465,23 @@ export class StarpondWater2D {
       const lrx = lr.rx * scale + lPulse;
       const lry = lr.ry * scale + lPulse * 0.6;
 
-      // Outer warm golden glow
-      ctx.fillStyle = 'rgba(251, 191, 36, 0.22)';
+      ctx.fillStyle = config.palette.lightingColor;
       ctx.beginPath();
       ctx.ellipse(lPos.x, lPos.y, lrx, lry, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Core amber reflection
-      ctx.fillStyle = 'rgba(254, 240, 138, 0.40)';
+      ctx.fillStyle = config.palette.lightingPulseColor;
       ctx.beginPath();
       ctx.ellipse(lPos.x, lPos.y, lrx * 0.55, lry * 0.55, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Specular bright center
-      ctx.fillStyle = 'rgba(255, 255, 245, 0.65)';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(Math.floor(lPos.x - 1 * scale), Math.floor(lPos.y - 1 * scale), Math.floor(2 * scale), Math.floor(2 * scale));
     });
 
     // =========================================================================
     // STEP 6: VOLUMETRIC 3D SHADED FISH WITH DYNAMIC CAST SHADOWS (Multi-Depth)
     // =========================================================================
-    // Sort fish so deepest fish render first, surface fish render on top
     const sortedFish = [...this.fishRoster].sort((a, b) => a.depth - b.depth);
 
     sortedFish.forEach(fish => {
@@ -497,7 +495,6 @@ export class StarpondWater2D {
       const fh = fish.baseHeight * scale * depthScale;
 
       // 1. Dynamic Cast Shadow onto Deeper Water Bed
-      // Deeper fish have shadows offset further down-right; surface fish have tight shadows
       const shadowDistX = (3 + (1.0 - fish.depth) * 6) * scale;
       const shadowDistY = (4 + (1.0 - fish.depth) * 14) * scale;
       const shadowAlpha = 0.25 + fish.depth * 0.35;
@@ -511,9 +508,15 @@ export class StarpondWater2D {
       ctx.fill();
       ctx.restore();
 
-      // 2. Select Animated Sprite Frame
-      const frames = fish.type === 'koi' ? this.koiFrames : this.deepFishFrames;
-      if (frames.length > 0) {
+      // 2. Select Animated Sprite Frame based on fish type
+      let frames: HTMLCanvasElement[] = this.koiFrames;
+      if (fish.type === 'deep') frames = this.deepFishFrames;
+      else if (fish.type === 'jellyfish') frames = this.jellyfishFrames;
+      else if (fish.type === 'comet_dart') frames = this.cometFishFrames;
+      else if (fish.type === 'ghost') frames = this.ghostFishFrames;
+      else if (fish.type === 'dragon') frames = this.dragonFishFrames;
+
+      if (frames && frames.length > 0) {
         const animIdx = Math.floor(time * 6 + fish.tailPhase) % frames.length;
         const fishCanvas = frames[animIdx];
 
@@ -521,10 +524,10 @@ export class StarpondWater2D {
         ctx.translate(fScreen.x, fScreen.y);
         ctx.rotate(heading);
 
-        // Draw clean volumetric fish sprite
+        // Draw volumetric fish sprite
         ctx.drawImage(fishCanvas, -fw / 2, -fh / 2, fw, fh);
 
-        // Water absorption tint for submerged fish (uses source-atop to NEVER leak a box!)
+        // Water absorption tint for submerged fish
         if (fish.depth < 0.75) {
           const tintAlpha = (1.0 - fish.depth) * 0.38;
           ctx.globalCompositeOperation = 'source-atop';
@@ -549,17 +552,20 @@ export class StarpondWater2D {
     });
 
     // =========================================================================
-    // STEP 8: CLUSTERED LILY PADS WITH DEEP DROP SHADOWS (Reference Style)
+    // STEP 8: CLUSTERED LILY PADS / ICE FLOES / SUN DISKS
     // =========================================================================
-    if (this.lilypadCanvas) {
-      const padImg = this.lilypadCanvas;
+    let padImg = this.lotusPadCanvas;
+    if (config.water.padStyle === 'ice') padImg = this.iceFloeCanvas;
+    else if (config.water.padStyle === 'phantom') padImg = this.abyssalLilyCanvas;
+    else if (config.water.padStyle === 'ancient_gold') padImg = this.solarDiskCanvas;
 
+    if (padImg) {
       this.lilypads.forEach((lp, idx) => {
         const lpScreen = camera.worldToScreen(this.centerX + lp.x, this.centerY + lp.y + (drop * 0.45) / scale);
         const bobY = Math.sin(time * 1.5 + idx * 0.7) * 1.5 * scale;
         const padSize = 18 * scale * lp.sizeScale;
 
-        // 1. Soft Dark Drop Shadow Grounding Lily Pad onto Water Surface
+        // Soft Dark Drop Shadow
         ctx.save();
         ctx.fillStyle = 'rgba(2, 6, 14, 0.55)';
         ctx.beginPath();
@@ -567,7 +573,7 @@ export class StarpondWater2D {
         ctx.fill();
         ctx.restore();
 
-        // 2. Lilypad Sprite on Surface
+        // Sprite on Surface
         ctx.save();
         ctx.translate(lpScreen.x, lpScreen.y + bobY);
         ctx.rotate(lp.angle);
@@ -577,24 +583,24 @@ export class StarpondWater2D {
     }
 
     // =========================================================================
-    // STEP 9: FLOATING SAKURA / LOTUS FLOWER PETALS (Reference Benchmark)
+    // STEP 9: FLOATING SURFACE DEBRIS (Petals, Spores, Ice Shards, Comet Dust)
     // =========================================================================
     this.petals.forEach(pet => {
       const pScreen = camera.worldToScreen(this.centerX + pet.x, this.centerY + pet.y + (drop * 0.45) / scale);
       const pBob = Math.sin(time * 2.0 + pet.phase) * 1.2 * scale;
       const pSize = pet.size * scale;
 
-      // Petal contact shadow
+      // Contact shadow
       ctx.fillStyle = 'rgba(3, 8, 18, 0.45)';
       ctx.fillRect(Math.floor(pScreen.x + 1 * scale), Math.floor(pScreen.y + 2 * scale), Math.floor(pSize), Math.floor(pSize));
 
-      // Floating Petal Body
+      // Floating body
       ctx.fillStyle = pet.color;
       ctx.fillRect(Math.floor(pScreen.x), Math.floor(pScreen.y + pBob), Math.floor(pSize), Math.floor(pSize));
     });
 
     // =========================================================================
-    // STEP 10: INNER SHORELINE DROP SHADOW (Grounds rocks into water)
+    // STEP 10: INNER SHORELINE DROP SHADOW
     // =========================================================================
     const shadowSteps = 16;
     for (let step = 0; step < shadowSteps; step++) {
@@ -636,7 +642,7 @@ export class StarpondWater2D {
     ctx.restore(); // End clipping
 
     // =========================================================================
-    // STEP 12: HANDCRAFTED PERIMETER SHORELINE ROCKS (Wet base & Dry highlight)
+    // STEP 12: HANDCRAFTED PERIMETER SHORELINE ROCKS
     // =========================================================================
     this.shorelineRocks.forEach(rock => {
       const wx = this.centerX + Math.cos(rock.angle) * this.radiusX * rock.dist;
@@ -647,18 +653,18 @@ export class StarpondWater2D {
       const rh = rock.height * scale;
 
       // 1. Base Ground Contact Shadow
-      ctx.fillStyle = '#0a0818';
+      ctx.fillStyle = config.palette.cliffDrop;
       ctx.fillRect(Math.floor(rockScreen.x - rw / 2 + 1 * scale), Math.floor(rockScreen.y - rh / 2 + 2 * scale), Math.floor(rw), Math.floor(rh));
 
       // 2. Main Rock Body
       ctx.fillStyle = rock.color;
       ctx.fillRect(Math.floor(rockScreen.x - rw / 2), Math.floor(rockScreen.y - rh / 2), Math.floor(rw), Math.floor(rh));
 
-      // 3. Dark Wet Waterline Base (Lower 35% where rock meets water)
+      // 3. Dark Wet Waterline Base
       ctx.fillStyle = rock.wetColor;
       ctx.fillRect(Math.floor(rockScreen.x - rw / 2), Math.floor(rockScreen.y + rh * 0.15), Math.floor(rw), Math.floor(rh * 0.35));
 
-      // 4. Stepped Moonlight Top Highlight
+      // 4. Stepped Top Highlight
       ctx.fillStyle = rock.highlight;
       ctx.fillRect(Math.floor(rockScreen.x - rw / 2 + 1 * scale), Math.floor(rockScreen.y - rh / 2 + 1 * scale), Math.floor(rw - 2 * scale), Math.max(1, Math.floor(rh * 0.35)));
     });

@@ -77,6 +77,13 @@ export class CharacterPackLoader {
       this.getSpriteSheet(breed, anim);
     }
 
+    // Also preload equipped rod sheets
+    const rods = ['rod_starlight', 'rod_bamboo', 'rod_nebula', 'rod_abyssal', 'rod_solaris', 'rod_supernova'];
+    for (const rod of rods) {
+      this.getSpriteSheet(breed, 'fishing', rod);
+      this.getSpriteSheet(breed, 'fishing_reaction', rod);
+    }
+
     const portraits: CharacterPortraitName[] = ['front', 'side', 'back', 'icon'];
     for (const portrait of portraits) {
       this.getPortrait(breed, portrait);
@@ -84,14 +91,24 @@ export class CharacterPackLoader {
   }
 
   // Retrieve or create HTMLImageElement for an animation sprite sheet
-  public getSpriteSheet(breed: CatBreed, anim: CharacterAnimationName): HTMLImageElement {
-    const key = `sheet_${breed}_${anim}`;
+  public getSpriteSheet(breed: CatBreed, anim: CharacterAnimationName, rodId?: string): HTMLImageElement {
+    const isFishing = (anim === 'fishing' || anim === 'fishing_reaction');
+    const actualRodId = isFishing ? (rodId || 'rod_starlight') : '';
+    const key = isFishing ? `sheet_${breed}_${anim}_${actualRodId}` : `sheet_${breed}_${anim}`;
+
     let img = this.imageCache.get(key);
     if (!img) {
       img = new Image();
-      img.src = `/assets/character/${breed}/SpriteSheets/${anim}.png`;
+      const fileName = isFishing ? `${anim}_${actualRodId}.png` : `${anim}.png`;
+      img.src = `/assets/character/${breed}/SpriteSheets/${fileName}`;
       img.onload = () => {
         this.loadedMap.set(key, true);
+      };
+      img.onerror = () => {
+        // Fallback to base sheet if custom rod file fails
+        if (isFishing && img) {
+          img.src = `/assets/character/${breed}/SpriteSheets/${anim}.png`;
+        }
       };
       this.imageCache.set(key, img);
     }
@@ -132,9 +149,10 @@ export class CharacterPackLoader {
     destX: number,
     destY: number,
     destSize: number,
-    flipX: boolean = false
+    flipX: boolean = false,
+    rodId?: string
   ): boolean {
-    const img = this.getSpriteSheet(breed, anim);
+    const img = this.getSpriteSheet(breed, anim, rodId);
     if (!img.complete || img.naturalWidth === 0) {
       return false; // Not loaded yet
     }

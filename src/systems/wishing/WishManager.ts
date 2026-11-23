@@ -168,16 +168,19 @@ export class WishManager {
     return blessings.some(b => b.id === type);
   }
 
-  // Grant a blessing to player
+  // Grant a blessing to player (extends existing timer if already active)
   public static grantBlessing(type: BlessingType): ActiveBlessing {
     const meta = CELESTIAL_BLESSINGS[type];
     const durationMs = meta.durationMinutes * 60 * 1000;
-    const expiresAt = Date.now() + durationMs;
 
     const data = SaveManager.getData();
     data.activeBlessings = data.activeBlessings || [];
 
-    // Replace if already present
+    const existing = data.activeBlessings.find(b => b.id === type);
+    const baseTime = existing && existing.expiresAt > Date.now() ? existing.expiresAt : Date.now();
+    const expiresAt = baseTime + durationMs;
+
+    // Filter out previous entry to replace with extended timer
     data.activeBlessings = data.activeBlessings.filter(b => b.id !== type);
 
     const blessing: ActiveBlessing = {
@@ -185,7 +188,7 @@ export class WishManager {
       name: meta.name,
       description: meta.description,
       icon: meta.icon,
-      durationSeconds: meta.durationMinutes * 60,
+      durationSeconds: Math.floor((expiresAt - Date.now()) / 1000),
       expiresAt
     };
 
@@ -270,7 +273,7 @@ export class WishManager {
       targetRarity = 'common';
     }
 
-    // Try to grant an unowned accessory of target rarity
+    // 1. Try to grant an unowned accessory of target rarity
     const matchingAcc = unownedAccessories.filter(a => a.rarity === targetRarity);
     if (matchingAcc.length > 0) {
       const chosen = matchingAcc[Math.floor(Math.random() * matchingAcc.length)];
@@ -284,16 +287,29 @@ export class WishManager {
       };
     }
 
-    // Otherwise, grant a powerful Celestial Blessing!
+    // If there is any unowned accessory and this is a high-rarity roll, give chance to unlock it
+    if (unownedAccessories.length > 0 && Math.random() < 0.50) {
+      const chosen = unownedAccessories[Math.floor(Math.random() * unownedAccessories.length)];
+      return {
+        id: `reward_acc_${chosen.id}`,
+        name: chosen.name,
+        description: chosen.description,
+        rarity: chosen.rarity,
+        type: 'accessory',
+        accessory: chosen
+      };
+    }
+
+    // 2. Grant or Extend a powerful Celestial Blessing! (Primary gameplay reward)
     const blessingKeys: BlessingType[] = ['starfall_abundance', 'celestial_clarity', 'abyssal_magnet', 'swift_paws', 'aurora_fortune'];
     const chosenBlessingKey = blessingKeys[Math.floor(Math.random() * blessingKeys.length)];
     const blessingMeta = CELESTIAL_BLESSINGS[chosenBlessingKey];
 
-    if (Math.random() < 0.65) {
+    if (Math.random() < 0.70) {
       return {
-        id: `reward_blessing_${chosenBlessingKey}`,
+        id: `reward_blessing_${chosenBlessingKey}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
         name: blessingMeta.name,
-        description: blessingMeta.description,
+        description: `${blessingMeta.description} (+5m duration)`,
         rarity: targetRarity,
         type: 'blessing',
         blessing: {
@@ -307,20 +323,32 @@ export class WishManager {
       };
     }
 
-    // Or a Stardust Jackpot!
-    const jackpotAmounts = {
-      legendary: 1200,
-      epic: 600,
-      rare: 300,
-      uncommon: 150,
-      common: 100
+    // 3. Rare Lucky Bonus: Free Wish Token!
+    if (targetRarity === 'legendary' || (targetRarity === 'epic' && Math.random() < 0.35)) {
+      return {
+        id: `reward_token_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        name: '✦ Celestial Wish Token ✦',
+        description: 'A crystallized starlight token granted by the fountain! (+1 Free Wish Token)',
+        rarity: targetRarity,
+        type: 'cosmic_event',
+        stardustAmount: 0
+      };
+    }
+
+    // 4. Starlight Star Shard (Modest consolation rebate - NEVER exceeds wish cost!)
+    const shardAmounts = {
+      legendary: 50,
+      epic: 35,
+      rare: 25,
+      uncommon: 15,
+      common: 10
     };
-    const amt = jackpotAmounts[targetRarity] || 150;
+    const amt = shardAmounts[targetRarity] || 15;
 
     return {
-      id: `reward_jackpot_${Date.now()}`,
-      name: `Supernova Jackpot (${amt} Stardust)`,
-      description: `A burst of cosmic energy showering you with ${amt} Stardust!`,
+      id: `reward_shard_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      name: `Starlight Star Shard (+${amt} Stardust)`,
+      description: `Glimmering stardust condensed from the constellation fountain (+${amt} Stardust rebate).`,
       rarity: targetRarity,
       type: 'stardust_jackpot',
       stardustAmount: amt
@@ -339,6 +367,8 @@ export class WishManager {
       return; // grantBlessing already saves
     } else if (reward.type === 'stardust_jackpot' && reward.stardustAmount) {
       data.stardust += reward.stardustAmount;
+    } else if (reward.type === 'cosmic_event' && reward.name.includes('Token')) {
+      data.wishTokens = (data.wishTokens || 0) + 1;
     }
 
     SaveManager.save(data);

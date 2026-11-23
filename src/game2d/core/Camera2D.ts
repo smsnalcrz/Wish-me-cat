@@ -59,11 +59,13 @@ export class Camera2D {
     this.shakeIntensity = intensity;
   }
 
-  public update(targetX: number, targetY: number, delta: number): void {
-    // Smooth follow
-    const t = Math.min(1.0, delta * this.lerpSpeed);
-    this.x += (targetX - this.x) * t;
-    this.y += (targetY - this.y) * t;
+  public update(targetX: number, targetY: number, delta: number, lookaheadX: number = 0, lookaheadY: number = 0): void {
+    // Smooth exponential damping follow (framerate-independent, buttery-smooth lerp)
+    const t = 1.0 - Math.exp(-this.lerpSpeed * delta);
+    const destX = targetX + lookaheadX;
+    const destY = targetY + lookaheadY;
+    this.x += (destX - this.x) * t;
+    this.y += (destY - this.y) * t;
 
     // Clamp to map boundaries
     this.x = Math.max(this.minX, Math.min(this.maxX, this.x));

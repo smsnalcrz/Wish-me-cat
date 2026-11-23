@@ -33,7 +33,9 @@ export const DEFAULT_SAVE: SaveData = {
   unlockedAccessories: ['charm_starlight_bell'],
   equippedAccessories: {
     charm: 'charm_starlight_bell'
-  }
+  },
+  unlockedRodIds: ['rod_starlight'],
+  equippedRodId: 'rod_starlight'
 };
 
 export class SaveManager {
@@ -52,7 +54,9 @@ export class SaveManager {
             totalWishesMade: parsed.totalWishesMade || 0,
             activeBlessings: Array.isArray(parsed.activeBlessings) ? parsed.activeBlessings : [],
             unlockedAccessories: Array.isArray(parsed.unlockedAccessories) ? parsed.unlockedAccessories : ['charm_starlight_bell'],
-            equippedAccessories: parsed.equippedAccessories || { charm: 'charm_starlight_bell' }
+            equippedAccessories: parsed.equippedAccessories || { charm: 'charm_starlight_bell' },
+            unlockedRodIds: Array.isArray(parsed.unlockedRodIds) && parsed.unlockedRodIds.length > 0 ? parsed.unlockedRodIds : ['rod_starlight'],
+            equippedRodId: typeof parsed.equippedRodId === 'string' ? parsed.equippedRodId : 'rod_starlight'
           };
           return this.data;
         }
